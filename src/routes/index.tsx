@@ -47,18 +47,18 @@ const howItWorksSteps = [
     ),
   },
   {
-    title: 'Пример использования',
-    description: 'Посмотрите, как ваша карточка будет выглядеть в выбранной концепции и выберите один из вариантов дизайна.',
+    title: 'Отредактируйте текст',
+    description: 'Настройте надписи на карточке: цены, акции, преимущества. Готовое изображение скачивается в один клик.',
     component: (selectedConceptId: string | null, concepts: any[], selectedImageIndex: number, setSelectedConceptId: (id: string) => void, setSelectedImageIndex: (index: number) => void) => {
       const selectedConcept = concepts.find(c => c.id === selectedConceptId);
       if (!selectedConcept) {
-        return <p className="text-center text-[var(--sea-ink-soft)]">Выберите концепцию на предыдущем шаге.</p>;
+        return <p className="text-center text-[var(--sea-ink-soft)]">Выберите концепцию на шаге 2.</p>;
       }
       return (
         <div className="flex flex-col items-center space-y-4">
           <img
             src={selectedConcept.images[selectedImageIndex]}
-            alt="Пример использования"
+            alt="Сгенерированная карточка"
             className="h-64 w-64 object-contain rounded-lg shadow-md"
           />
           <div className="flex space-x-2">
@@ -73,6 +73,12 @@ const howItWorksSteps = [
               />
             ))}
           </div>
+          <textarea
+            className="w-full max-w-xs p-2 border rounded-md"
+            rows={3}
+            placeholder="Отредактируйте текст на карточке здесь..."
+            disabled
+          ></textarea>
         </div>
       );
     },
