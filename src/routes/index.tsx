@@ -20,7 +20,7 @@ const howItWorksSteps = [
   {
     title: 'Выберите концепцию',
     description: 'Выберите одну из представленных концепций. Каждая концепция предлагает уникальный стиль оформления.',
-    component: (selectedConceptId: string | null, concepts: any[], selectedImageIndex: number, setSelectedConceptId: (id: string) => void) => (
+    component: (selectedConceptId: string | null, concepts: any[], selectedImageIndex: number, setSelectedConceptId: (id: string) => void, setSelectedImageIndex: (index: number) => void) => (
       <div className="flex flex-col items-center space-y-4">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {concepts.map((concept) => (
