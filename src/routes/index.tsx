@@ -7,7 +7,7 @@ export const Route = createFileRoute('/')({ component: App })
 const howItWorksSteps = [
   {
     title: 'Загрузите фото товара',
-    description: 'Начните с загрузки вашего фото товара. Мы покажем, как оно будет выглядеть сгенерированной карточке.',
+    description: 'Начните с загрузки вашего фото товара. Мы покажем, как будет выглядеть сгенерированная карточка.',
     component: (selectedConceptId: string | null, concepts: any[], selectedImageIndex: number) => (
       <div className="flex flex-col items-center justify-center space-y-4">
         <img src="/shirts.webp" alt="Шаг 1: Загрузка фото" className="h-80 w-80 object-contain rounded-lg shadow-md" />
@@ -201,8 +201,9 @@ function App() {
             )}
             {currentStep < howItWorksSteps.length - 1 && (
               <button
-                className="inline-flex items-center gap-2 rounded-full border border-[rgba(50,143,151,0.3)] bg-[rgba(79,184,178,0.14)] px-5 py-2.5 text-sm font-semibold text-[var(--lagoon-deep)] no-underline transition hover:-translate-y-0.5 hover:bg-[rgba(79,184,178,0.24)]"
+                className={`inline-flex items-center gap-2 rounded-full border border-[rgba(50,143,151,0.3)] bg-[rgba(79,184,178,0.14)] px-5 py-2.5 text-sm font-semibold text-[var(--lagoon-deep)] no-underline transition hover:-translate-y-0.5 hover:bg-[rgba(79,184,178,0.24)] ${currentStep === 1 && !selectedConceptId ? 'opacity-50 cursor-not-allowed' : ''}`}
                 onClick={() => setCurrentStep(currentStep + 1)}
+                disabled={currentStep === 1 && !selectedConceptId}
               >
                 Следующий шаг
                 <ArrowRight className="h-4 w-4" />
