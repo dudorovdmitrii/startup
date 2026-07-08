@@ -162,8 +162,9 @@ function App() {
                 className={`rounded-full px-4 py-2 text-sm font-semibold ${currentStep === index
                   ? 'bg-[rgba(79,184,178,0.24)] text-[var(--lagoon-deep)]'
                   : 'bg-gray-100 text-[var(--sea-ink-soft)] hover:bg-gray-200'
-                  }`}
+                  } ${index === 2 && !selectedConceptId ? 'opacity-50 cursor-not-allowed' : ''}`}
                 onClick={() => setCurrentStep(index)}
+                disabled={index === 2 && !selectedConceptId}
               >
                 Шаг {index + 1}
               </button>
