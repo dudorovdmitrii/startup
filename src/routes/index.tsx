@@ -10,7 +10,7 @@ const howItWorksSteps = [
     description: 'Начните с загрузки вашего фото товара. Мы покажем, как оно будет выглядеть сгенерированной карточке.',
     component: (selectedConceptId: string | null, concepts: any[], selectedImageIndex: number) => (
       <div className="flex flex-col items-center justify-center space-y-4">
-        <img src="/shirts.webp" alt="Шаг 1: Загрузка фото" className="h-64 w-64 object-contain rounded-lg shadow-md" />
+        <img src="/shirts.webp" alt="Шаг 1: Загрузка фото" className="h-80 w-80 object-contain rounded-lg shadow-md" />
         <p className="text-sm text-center text-[var(--sea-ink-soft)]">
           Представьте, что это ваше загруженное фото.
         </p>
@@ -35,7 +35,7 @@ const howItWorksSteps = [
               <img
                 src={concept.images[0]}
                 alt={concept.name}
-                className="mb-2 h-48 w-full object-cover rounded-md"
+                className="mb-2 h-64 w-full object-cover rounded-md"
               />
               <p className="text-center text-sm font-semibold text-[var(--sea-ink)]">
                 {concept.name}
@@ -59,7 +59,7 @@ const howItWorksSteps = [
           <img
             src={selectedConcept.images[selectedImageIndex]}
             alt="Сгенерированная карточка"
-            className="h-80 w-80 object-contain rounded-lg shadow-md"
+            className="h-96 w-96 object-contain rounded-lg shadow-md"
           />
           <div className="flex space-x-2">
             {selectedConcept.images.map((image: string, index: number) => (
@@ -67,7 +67,7 @@ const howItWorksSteps = [
                 key={image}
                 src={image}
                 alt={`Вариант ${index + 1}`}
-                className={`cursor-pointer h-24 w-24 object-cover rounded-md border-2 ${selectedImageIndex === index ? 'border-[var(--lagoon-deep)]' : 'border-gray-200'
+                className={`cursor-pointer h-32 w-32 object-cover rounded-md border-2 ${selectedImageIndex === index ? 'border-[var(--lagoon-deep)]' : 'border-gray-200'
                   }`}
                 onClick={() => setSelectedImageIndex(index)}
               />
