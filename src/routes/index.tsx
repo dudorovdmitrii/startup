@@ -132,14 +132,14 @@ function App() {
         <div className="flex flex-wrap gap-3">
           <a
             href="#cta"
-            className="inline-flex items-center gap-2 rounded-full border border-[rgba(50,143,151,0.3)] bg-[rgba(79,184,178,0.14)] px-5 py-2.5 text-sm font-semibold text-[var(--lagoon-deep)] no-underline transition hover:-translate-y-0.5 hover:bg-[rgba(79,184,178,0.24)]"
+            className="inline-flex items-center gap-2 rounded-full border border-[rgba(50,143,151,0.3)] bg-[rgba(79,184,178,0.14)] px-5 py-2.5 text-sm font-semibold text-[var(--lagoon-deep)] no-underline transition hover:-translate-y-0.5 hover:bg-[rgba(79,184,178,0.24)] cursor-pointer"
           >
             Создать карточку
             <ArrowRight className="h-4 w-4" />
           </a>
           <a
             href="#how-it-works"
-            className="rounded-full border border-[rgba(23,58,64,0.2)] bg-white/50 px-5 py-2.5 text-sm font-semibold text-[var(--sea-ink)] no-underline transition hover:-translate-y-0.5 hover:border-[rgba(23,58,64,0.35)]"
+            className="rounded-full border border-[rgba(23,58,64,0.2)] bg-white/50 px-5 py-2.5 text-sm font-semibold text-[var(--sea-ink)] no-underline transition hover:-translate-y-0.5 hover:border-[rgba(23,58,64,0.35)] cursor-pointer"
           >
             Как это работает
           </a>
@@ -159,7 +159,7 @@ function App() {
             {howItWorksSteps.map((step, index) => (
               <button
                 key={step.title}
-                className={`rounded-full px-4 py-2 text-sm font-semibold ${currentStep === index
+                className={`rounded-full px-4 py-2 text-sm font-semibold cursor-pointer ${currentStep === index
                   ? 'bg-[rgba(79,184,178,0.24)] text-[var(--lagoon-deep)]'
                   : 'bg-gray-100 text-[var(--sea-ink-soft)] hover:bg-gray-200'
                   } ${index === 2 && !selectedConceptId ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -194,7 +194,7 @@ function App() {
           <div className="flex space-x-4">
             {currentStep > 0 && (
               <button
-                className="inline-flex items-center gap-2 rounded-full border border-[rgba(23,58,64,0.2)] bg-white/50 px-5 py-2.5 text-sm font-semibold text-[var(--sea-ink)] no-underline transition hover:-translate-y-0.5 hover:border-[rgba(23,58,64,0.35)]"
+                className="inline-flex items-center gap-2 rounded-full border border-[rgba(23,58,64,0.2)] bg-white/50 px-5 py-2.5 text-sm font-semibold text-[var(--sea-ink)] no-underline transition hover:-translate-y-0.5 hover:border-[rgba(23,58,64,0.35)] cursor-pointer"
                 onClick={() => setCurrentStep(currentStep - 1)}
               >
                 Предыдущий шаг
@@ -202,7 +202,7 @@ function App() {
             )}
             {currentStep < howItWorksSteps.length - 1 && (
               <button
-                className={`inline-flex items-center gap-2 rounded-full border border-[rgba(50,143,151,0.3)] bg-[rgba(79,184,178,0.14)] px-5 py-2.5 text-sm font-semibold text-[var(--lagoon-deep)] no-underline transition hover:-translate-y-0.5 hover:bg-[rgba(79,184,178,0.24)] ${currentStep === 1 && !selectedConceptId ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`inline-flex items-center gap-2 rounded-full border border-[rgba(50,143,151,0.3)] bg-[rgba(79,184,178,0.14)] px-5 py-2.5 text-sm font-semibold text-[var(--lagoon-deep)] no-underline transition hover:-translate-y-0.5 hover:bg-[rgba(79,184,178,0.24)] cursor-pointer ${currentStep === 1 && !selectedConceptId ? 'opacity-50 cursor-not-allowed' : ''}`}
                 onClick={() => setCurrentStep(currentStep + 1)}
                 disabled={currentStep === 1 && !selectedConceptId}
               >
@@ -253,7 +253,7 @@ function App() {
         </p>
         <a
           href="#cta"
-          className="inline-flex items-center gap-2 rounded-full border border-[rgba(50,143,151,0.3)] bg-[rgba(79,184,178,0.14)] px-6 py-3 text-sm font-semibold text-[var(--lagoon-deep)] no-underline transition hover:-translate-y-0.5 hover:bg-[rgba(79,184,178,0.24)]"
+          className="inline-flex items-center gap-2 rounded-full border border-[rgba(50,143,151,0.3)] bg-[rgba(79,184,178,0.14)] px-6 py-3 text-sm font-semibold text-[var(--lagoon-deep)] no-underline transition hover:-translate-y-0.5 hover:bg-[rgba(79,184,178,0.24)] cursor-pointer"
         >
           Начать бесплатно
           <ArrowRight className="h-4 w-4" />
