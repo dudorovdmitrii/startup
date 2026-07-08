@@ -61,7 +61,7 @@ const howItWorksSteps = [
             alt="Сгенерированная карточка"
             className="h-64 w-64 object-contain rounded-lg shadow-md"
           />
-          <div className="flex space-x-2">
+          <div className="flex space-x-2 p-2 bg-gray-100 border border-gray-300 rounded-md">
             {selectedConcept.images.map((image: string, index: number) => (
               <img
                 key={image}
