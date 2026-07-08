@@ -48,7 +48,7 @@ const howItWorksSteps = [
   },
   {
     title: 'Отредактируйте текст',
-    description: 'Настройте надписи на карточке: цены, акции, преимущества. Готовое изображение скачивается в один клик.',
+    description: 'Выберите один из трех вариантов дизайна вашей карточки с уже измененным текстом.',
     component: (selectedConceptId: string | null, concepts: any[], selectedImageIndex: number, setSelectedConceptId: (id: string) => void, setSelectedImageIndex: (index: number) => void) => {
       const selectedConcept = concepts.find(c => c.id === selectedConceptId);
       if (!selectedConcept) {
@@ -73,12 +73,6 @@ const howItWorksSteps = [
               />
             ))}
           </div>
-          <textarea
-            className="w-full max-w-xs p-2 border rounded-md"
-            rows={3}
-            placeholder="Отредактируйте текст на карточке здесь..."
-            disabled
-          ></textarea>
         </div>
       );
     },
