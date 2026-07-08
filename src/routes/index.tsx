@@ -163,8 +163,8 @@ function App() {
               <button
                 key={step.title}
                 className={`rounded-full px-4 py-2 text-sm font-semibold cursor-pointer ${currentStep === index
-                  ? 'bg-[rgba(79,184,178,0.24)] text-[var(--lagoon-deep)]'
-                  : 'bg-gray-100 text-[var(--sea-ink-soft)] hover:bg-gray-200'
+                  ? 'bg-[rgba(79,184,178,0.24)] text-[var(--lagoon-deep)] dark:bg-[rgba(79,184,178,0.4)] dark:text-[var(--lagoon)]'
+                  : 'bg-gray-100 text-[var(--sea-ink-soft)] hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700'
                   } ${index === 2 && !selectedConceptId ? 'opacity-50 cursor-not-allowed' : ''}`}
                 onClick={() => setCurrentStep(index)}
                 disabled={index === 2 && !selectedConceptId}
