@@ -15,6 +15,7 @@ function CreateCardPage() {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null)
   const [selectedConceptId, setSelectedConceptId] = useState<string | null>(null)
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null)
+  const [fileName, setFileName] = useState<string>('')
 
   // Placeholder for image generation
   const generateCard = async () => {
@@ -39,21 +40,26 @@ function CreateCardPage() {
       {/* Step 1: Upload Image */}
       <section className="island-shell rise-in rounded-2xl p-6 mb-8">
         <h4 className="mb-4 text-xl font-semibold text-[var(--sea-ink)]">1. Загрузите фото товара</h4>
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e) => {
-            if (e.target.files && e.target.files[0]) {
-              setUploadedImage(URL.createObjectURL(e.target.files[0]));
-            }
-          }}
-          className="block w-full text-sm text-gray-500
-            file:mr-4 file:py-2 file:px-4
-            file:rounded-full file:border-0
-            file:text-sm file:font-semibold
-            file:bg-violet-50 file:text-violet-700
-            hover:file:bg-violet-100 cursor-pointer"
-        />
+        <div className="flex items-center space-x-4">
+          <label htmlFor="file-upload" className="inline-flex items-center justify-center rounded-full border-0 py-2 px-4 text-sm font-semibold cursor-pointer bg-violet-50 text-violet-700 hover:bg-violet-100">
+            Выберите файл
+          </label>
+          <input
+            id="file-upload"
+            type="file"
+            accept="image/*"
+            onChange={(e) => {
+              if (e.target.files && e.target.files[0]) {
+                setUploadedImage(URL.createObjectURL(e.target.files[0]));
+                setFileName(e.target.files[0].name);
+              } else {
+                setFileName('');
+              }
+            }}
+            className="sr-only"
+          />
+          <span className="text-sm text-gray-500">{fileName || 'Файл не выбран'}</span>
+        </div>
         {uploadedImage && (
           <div className="mt-4">
             <p className="text-sm text-[var(--sea-ink-soft)]">Загруженное изображение:</p>

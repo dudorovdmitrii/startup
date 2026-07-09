@@ -4,6 +4,42 @@ import { useState, useEffect } from 'react'
 
 export const Route = createFileRoute('/')({ component: App })
 
+const pricingPlans = [
+  {
+    name: 'Базовый',
+    description: 'Идеально для начинающих продавцов.',
+    price: '0₽',
+    features: [
+      '5 генераций в месяц',
+      'Стандартные шаблоны',
+      'Базовая поддержка',
+    ],
+  },
+  {
+    name: 'Профи',
+    description: 'Для активных продавцов на маркетплейсах.',
+    price: '990₽',
+    features: [
+      '50 генераций в месяц',
+      'Расширенные шаблоны',
+      'Приоритетная поддержка',
+      'История генераций',
+    ],
+  },
+  {
+    name: 'Бизнес',
+    description: 'Для крупных брендов и больших объемов.',
+    price: '2990₽',
+    features: [
+      'Неограниченные генерации',
+      'Все шаблоны',
+      'Премиум поддержка 24/7',
+      'Командный доступ',
+      'Индивидуальные интеграции',
+    ],
+  },
+]
+
 const howItWorksSteps = [
   {
     title: 'Загрузите фото товара',
@@ -244,6 +280,45 @@ function App() {
         </div>
       </section>
 
+
+      {/* Pricing */}
+      <section id="pricing" className="mt-14">
+        <p className="island-kicker mb-2 text-center">Цены</p>
+        <h2 className="display-title mb-8 text-center text-3xl font-bold tracking-tight text-[var(--sea-ink)] sm:text-4xl">
+          Выберите свой план
+        </h2>
+        <div className="grid gap-6 md:grid-cols-3">
+          {pricingPlans.map((plan, index) => (
+            <article
+              key={plan.name}
+              className="island-shell feature-card rise-in flex flex-col rounded-2xl p-6"
+              style={{ animationDelay: `${index * 100 + 80}ms` }}
+            >
+              <h3 className="mb-2 text-xl font-semibold text-[var(--sea-ink)]">{plan.name}</h3>
+              <p className="mb-4 text-sm text-[var(--sea-ink-soft)]">{plan.description}</p>
+              <div className="mb-6">
+                <span className="text-4xl font-bold text-[var(--sea-ink)]">{plan.price}</span>
+                <span className="text-lg text-[var(--sea-ink-soft)]">/месяц</span>
+              </div>
+              <ul className="mb-6 flex-grow space-y-2 text-sm text-[var(--sea-ink-soft)]">
+                {plan.features.map((feature, i) => (
+                  <li key={i} className="flex items-center">
+                    <svg className="mr-2 h-4 w-4 text-[var(--lagoon-deep)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+              <Link
+                to="/create-card"
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-[rgba(50,143,151,0.3)] bg-[rgba(79,184,178,0.14)] px-6 py-3 text-sm font-semibold text-[var(--lagoon-deep)] no-underline transition hover:-translate-y-0.5 hover:bg-[rgba(79,184,178,0.24)] cursor-pointer mt-auto"
+              >
+                Начать с {plan.name}
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </article>
+          ))}
+        </div>
+      </section>
 
       {/* CTA */}
       <section id="cta" className="island-shell mt-14 rounded-[2rem] p-8 text-center sm:p-12">

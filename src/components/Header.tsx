@@ -2,8 +2,8 @@ import { Link, useRouterState } from '@tanstack/react-router'
 import ThemeToggle from './ThemeToggle'
 
 export default function Header() {
-  const { pathname } = useRouterState()
-  const hideNavigation = pathname === '/create-card'
+  const { location } = useRouterState()
+  const hideNavigation = location.pathname === '/create-card'
 
   return (
     <header className="sticky top-0 z-50 border-b border-[var(--line)] bg-[var(--header-bg)] px-4 backdrop-blur-lg">
@@ -29,15 +29,17 @@ export default function Header() {
           </div>
         )}
 
-        <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
-          <a
-            href="#cta"
-            className="rounded-full border border-[rgba(50,143,151,0.3)] bg-[rgba(79,184,178,0.14)] px-4 py-1.5 text-sm font-semibold text-[var(--lagoon-deep)] no-underline transition hover:-translate-y-0.5 hover:bg-[rgba(79,184,178,0.24)]"
-          >
-            Попробовать
-          </a>
-          <ThemeToggle />
-        </div>
+        {!hideNavigation && (
+          <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
+            <Link
+              to="/create-card"
+              className="rounded-full border border-[rgba(50,143,151,0.3)] bg-[rgba(79,184,178,0.14)] px-4 py-1.5 text-sm font-semibold text-[var(--lagoon-deep)] no-underline transition hover:-translate-y-0.5 hover:bg-[rgba(79,184,178,0.24)]"
+            >
+              Попробовать
+            </Link>
+            <ThemeToggle />
+          </div>
+        )}
       </nav>
     </header>
   )
