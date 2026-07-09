@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx *)",
+      "Agent(Explore)",
+      "Bash(npm run *)",
+      "Bash(source *)",
+      "Bash(nvm *)",
+      "Bash(node *)",
+      "Bash(git add *)",
+      "Bash(git commit *)"
+    ]
+  },
+  "$version": 4
+}
