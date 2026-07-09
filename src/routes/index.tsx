@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { Upload, Palette, Type, Sparkles, ArrowRight, ShoppingBag } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
@@ -130,13 +130,13 @@ function App() {
           и&nbsp;Wildberries.
         </p>
         <div className="flex flex-wrap gap-3">
-          <a
-            href="#cta"
+          <Link
+            to="/create-card"
             className="inline-flex items-center gap-2 rounded-full border border-[rgba(50,143,151,0.3)] bg-[rgba(79,184,178,0.14)] px-5 py-2.5 text-sm font-semibold text-[var(--lagoon-deep)] no-underline transition hover:-translate-y-0.5 hover:bg-[rgba(79,184,178,0.24)] cursor-pointer"
           >
             Создать карточку
             <ArrowRight className="h-4 w-4" />
-          </a>
+          </Link>
           <button
             type="button"
             className="rounded-full border border-[rgba(23,58,64,0.2)] bg-white/50 px-5 py-2.5 text-sm font-semibold text-[var(--sea-ink)] no-underline transition hover:-translate-y-0.5 hover:border-[rgba(23,58,64,0.35)] cursor-pointer"
@@ -254,13 +254,13 @@ function App() {
           Загрузите фото товара и получите готовую карточку для маркетплейса
           за&nbsp;пару минут.
         </p>
-        <a
-          href="#cta"
+        <Link
+          to="/create-card"
           className="inline-flex items-center gap-2 rounded-full border border-[rgba(50,143,151,0.3)] bg-[rgba(79,184,178,0.14)] px-6 py-3 text-sm font-semibold text-[var(--lagoon-deep)] no-underline transition hover:-translate-y-0.5 hover:bg-[rgba(79,184,178,0.24)] cursor-pointer"
         >
           Начать бесплатно
           <ArrowRight className="h-4 w-4" />
-        </a>
+        </Link>
       </section>
     </main>
   );
