@@ -16,6 +16,7 @@ function CreateCardPage() {
   const [selectedConceptId, setSelectedConceptId] = useState<string | null>(null)
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null)
   const [fileName, setFileName] = useState<string>('')
+  const [isLoading, setIsLoading] = useState(false)
 
   // Placeholder for image generation
   const generateCard = async () => {
@@ -41,7 +42,7 @@ function CreateCardPage() {
       <section className="island-shell rise-in rounded-2xl p-6 mb-8">
         <h4 className="mb-4 text-xl font-semibold text-[var(--sea-ink)]">1. Загрузите фото товара</h4>
         <div className="flex items-center space-x-4">
-          <label htmlFor="file-upload" className="inline-flex items-center justify-center rounded-full border-0 py-2 px-4 text-sm font-semibold cursor-pointer bg-violet-50 text-violet-700 hover:bg-violet-100">
+          <label htmlFor="file-upload" className="inline-flex items-center justify-center rounded-full border-0 py-2 px-4 text-sm font-semibold cursor-pointer bg-[color-mix(in_oklab,var(--lagoon),transparent_90%)] text-[var(--lagoon-deep)] hover:bg-[color-mix(in_oklab,var(--lagoon),transparent_80%)]">
             Выберите файл
           </label>
           <input
@@ -99,7 +100,6 @@ function CreateCardPage() {
         <h4 className="mb-4 text-xl font-semibold text-[var(--sea-ink)]">3. Сгенерировать карточку</h4>
         <button
           onClick={async () => {
-            // Placeholder: Check if image and concept are selected
             if (!uploadedImage) {
               alert('Пожалуйста, загрузите изображение товара.');
               return;
@@ -108,13 +108,30 @@ function CreateCardPage() {
               alert('Пожалуйста, выберите концепцию.');
               return;
             }
-            const url = await generateCard();
-            setGeneratedImageUrl(url);
+            setIsLoading(true);
+            try {
+              const url = await generateCard();
+              setGeneratedImageUrl(url);
+            } finally {
+              setIsLoading(false);
+            }
           }}
-          className="inline-flex items-center gap-2 rounded-full border border-[rgba(50,143,151,0.3)] bg-[rgba(79,184,178,0.14)] px-6 py-3 text-sm font-semibold text-[var(--lagoon-deep)] no-underline transition hover:-translate-y-0.5 hover:bg-[rgba(79,184,178,0.24)] cursor-pointer"
+          className={`inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold no-underline transition
+            ${isLoading || !uploadedImage || !selectedConceptId
+              ? 'bg-gray-300 text-gray-500 cursor-not-allowed border-gray-400 dark:bg-gray-700 dark:text-gray-500 dark:border-gray-600'
+              : 'border border-[var(--lagoon)] bg-[color-mix(in_oklab,var(--lagoon),transparent_86%)] text-[var(--lagoon-deep)] hover:-translate-y-0.5 hover:bg-[color-mix(in_oklab,var(--lagoon),transparent_76%)] cursor-pointer'
+            }`}disabled={isLoading || !uploadedImage || !selectedConceptId}
         >
-          Сгенерировать
+          {isLoading ? 'Генерация...' : 'Сгенерировать'}
+          {isLoading && (
+            <svg className="animate-spin h-5 w-5 text-[var(--lagoon-deep)]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          )}
         </button>
+        {!uploadedImage && !isLoading && <span className="ml-4 text-sm text-red-500">Пожалуйста, загрузите фото товара.</span>}
+        {uploadedImage && !selectedConceptId && !isLoading && <span className="ml-4 text-sm text-red-500">Пожалуйста, выберите концепцию.</span>}
 
         {generatedImageUrl && (
           <div className="mt-8">

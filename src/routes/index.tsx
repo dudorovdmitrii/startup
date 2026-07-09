@@ -154,28 +154,27 @@ function App() {
     <main className="page-wrap px-4 pb-8 pt-14">
       {/* Hero */}
       <section className="island-shell rise-in relative overflow-hidden rounded-[2rem] px-6 py-10 sm:px-10 sm:py-16">
-        <div className="pointer-events-none absolute -left-20 -top-24 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(79,184,178,0.32),transparent_66%)]" />
-        <div className="pointer-events-none absolute -bottom-20 -right-20 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(47,106,74,0.18),transparent_66%)]" />
+        <div className="pointer-events-none absolute -left-20 -top-24 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(96,165,250,0.32),transparent_66%)]" />
+        <div className="pointer-events-none absolute -bottom-20 -right-20 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(59,130,246,0.18),transparent_66%)]" />
         <p className="island-kicker mb-3">Генератор карточек для маркетплейсов</p>
         <h1 className="display-title mb-5 max-w-3xl text-4xl leading-[1.02] font-bold tracking-tight text-[var(--sea-ink)] sm:text-6xl">
           Продающие карточки за&nbsp;минуты
         </h1>
-        <p className="mb-8 max-w-2xl text-base text-[var(--sea-ink-soft)] sm:text-lg">
+        <p className="mb-8 max-w-3xl text-base text-[var(--sea-ink-soft)] sm:text-lg">
           Загрузите фото товара, выберите стиль оформления и отредактируйте текст
-          на&nbsp;карточке. Никакого дизайна с нуля — готовые шаблоны для Ozon
-          и&nbsp;Wildberries.
+          на&nbsp;карточке. Никакого дизайна с нуля — <span className="whitespace-nowrap">готовые шаблоны для <span style={{ color: '#005bff' }}>Ozon</span>&nbsp;и&nbsp;<span style={{ color: 'rgb(167, 58, 253)' }}>Wildberries</span>.</span>
         </p>
         <div className="flex flex-wrap gap-3">
           <Link
             to="/create-card"
-            className="inline-flex items-center gap-2 rounded-full border border-[rgba(50,143,151,0.3)] bg-[rgba(79,184,178,0.14)] px-5 py-2.5 text-sm font-semibold text-[var(--lagoon-deep)] no-underline transition hover:-translate-y-0.5 hover:bg-[rgba(79,184,178,0.24)] cursor-pointer"
+            className="inline-flex items-center gap-2 rounded-full border border-[var(--lagoon)] bg-[color-mix(in_oklab,var(--lagoon),transparent_86%)] px-5 py-2.5 text-sm font-semibold text-[var(--lagoon-deep)] no-underline transition hover:-translate-y-0.5 hover:bg-[color-mix(in_oklab,var(--lagoon),transparent_76%)] cursor-pointer"
           >
             Создать карточку
             <ArrowRight className="h-4 w-4" />
           </Link>
           <button
             type="button"
-            className="rounded-full border border-[rgba(23,58,64,0.2)] bg-white/50 px-5 py-2.5 text-sm font-semibold text-[var(--sea-ink)] no-underline transition hover:-translate-y-0.5 hover:border-[rgba(23,58,64,0.35)] cursor-pointer"
+            className="rounded-full border border-[var(--line)] bg-[var(--foam)] px-5 py-2.5 text-sm font-semibold text-[var(--sea-ink)] no-underline transition hover:-translate-y-0.5 hover:border-[var(--sea-ink-soft)] cursor-pointer"
             onClick={() => {
               document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
             }}
@@ -198,11 +197,15 @@ function App() {
             {howItWorksSteps.map((step, index) => (
               <button
                 key={step.title}
-                className={`rounded-full px-4 py-2 text-sm font-semibold cursor-pointer ${currentStep === index
-                  ? 'bg-[rgba(79,184,178,0.24)] text-[var(--lagoon-deep)] dark:bg-[rgba(79,184,178,0.4)] dark:text-[var(--lagoon)]'
-                  : 'bg-gray-100 text-[var(--sea-ink-soft)] hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700'
-                  } ${index === 2 && !selectedConceptId ? 'opacity-50 cursor-not-allowed' : ''}`}
-                onClick={() => setCurrentStep(index)}
+                className={`rounded-full px-4 py-2 text-sm font-semibold
+    ${currentStep === index
+      ? 'bg-[color-mix(in_oklab,var(--lagoon),transparent_76%)] text-[var(--lagoon-deep)] dark:bg-[color-mix(in_oklab,var(--lagoon),transparent_60%)] dark:text-[var(--lagoon)] cursor-pointer'
+      : 'bg-[var(--sand)] text-[var(--sea-ink-soft)] hover:bg-[var(--line)] dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700 cursor-pointer'
+    }
+                ${index === 2 && !selectedConceptId
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed border-gray-400 opacity-100 dark:bg-gray-700 dark:text-gray-500 dark:border-gray-600'
+                  : ''
+                }`}onClick={() => setCurrentStep(index)}
                 disabled={index === 2 && !selectedConceptId}
               >
                 Шаг {index + 1}
@@ -233,7 +236,7 @@ function App() {
           <div className="flex space-x-4">
             {currentStep > 0 && (
               <button
-                className="inline-flex items-center gap-2 rounded-full border border-[rgba(23,58,64,0.2)] bg-white/50 px-5 py-2.5 text-sm font-semibold text-[var(--sea-ink)] no-underline transition hover:-translate-y-0.5 hover:border-[rgba(23,58,64,0.35)] cursor-pointer"
+                className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--foam)] px-5 py-2.5 text-sm font-semibold text-[var(--sea-ink)] no-underline transition hover:-translate-y-0.5 hover:border-[var(--sea-ink-soft)] cursor-pointer"
                 onClick={() => setCurrentStep(currentStep - 1)}
               >
                 Предыдущий шаг
@@ -241,7 +244,7 @@ function App() {
             )}
             {currentStep < howItWorksSteps.length - 1 && (
               <button
-                className={`inline-flex items-center gap-2 rounded-full border border-[rgba(50,143,151,0.3)] bg-[rgba(79,184,178,0.14)] px-5 py-2.5 text-sm font-semibold text-[var(--lagoon-deep)] no-underline transition hover:-translate-y-0.5 hover:bg-[rgba(79,184,178,0.24)] cursor-pointer ${currentStep === 1 && !selectedConceptId ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`inline-flex items-center gap-2 rounded-full border border-[var(--lagoon)] bg-[color-mix(in_oklab,var(--lagoon),transparent_86%)] px-5 py-2.5 text-sm font-semibold text-[var(--lagoon-deep)] no-underline transition hover:-translate-y-0.5 hover:bg-[color-mix(in_oklab,var(--lagoon),transparent_76%)] cursor-pointer ${currentStep === 1 && !selectedConceptId ? 'opacity-50 cursor-not-allowed' : ''}`}
                 onClick={() => setCurrentStep(currentStep + 1)}
                 disabled={currentStep === 1 && !selectedConceptId}
               >
@@ -266,7 +269,7 @@ function App() {
               className="island-shell feature-card rise-in rounded-2xl p-5"
               style={{ animationDelay: `${index * 100 + 80}ms` }}
             >
-              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-[rgba(47,106,74,0.1)] text-[var(--palm)]">
+              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-[color-mix(in_oklab,var(--lagoon),transparent_90%)] text-[var(--lagoon-deep)]">
                 <feature.icon className="h-5 w-5" />
               </div>
               <h3 className="mb-1.5 text-base font-semibold text-[var(--sea-ink)]">
@@ -310,7 +313,7 @@ function App() {
               </ul>
               <Link
                 to="/create-card"
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-[rgba(50,143,151,0.3)] bg-[rgba(79,184,178,0.14)] px-6 py-3 text-sm font-semibold text-[var(--lagoon-deep)] no-underline transition hover:-translate-y-0.5 hover:bg-[rgba(79,184,178,0.24)] cursor-pointer mt-auto"
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-[var(--lagoon)] bg-[color-mix(in_oklab,var(--lagoon),transparent_86%)] px-6 py-3 text-sm font-semibold text-[var(--lagoon-deep)] no-underline transition hover:-translate-y-0.5 hover:bg-[color-mix(in_oklab,var(--lagoon),transparent_76%)] cursor-pointer mt-auto"
               >
                 Начать с {plan.name}
                 <ArrowRight className="h-4 w-4" />
@@ -331,7 +334,7 @@ function App() {
         </p>
         <Link
           to="/create-card"
-          className="inline-flex items-center gap-2 rounded-full border border-[rgba(50,143,151,0.3)] bg-[rgba(79,184,178,0.14)] px-6 py-3 text-sm font-semibold text-[var(--lagoon-deep)] no-underline transition hover:-translate-y-0.5 hover:bg-[rgba(79,184,178,0.24)] cursor-pointer"
+          className="inline-flex items-center gap-2 rounded-full border border-[var(--lagoon)] bg-[color-mix(in_oklab,var(--lagoon),transparent_86%)] px-6 py-3 text-sm font-semibold text-[var(--lagoon-deep)] no-underline transition hover:-translate-y-0.5 hover:bg-[color-mix(in_oklab,var(--lagoon),transparent_76%)] cursor-pointer"
         >
           Начать бесплатно
           <ArrowRight className="h-4 w-4" />
