@@ -23,3 +23,4 @@ pnpm dlx shadcn@latest add button
 
 Страницы:
 1. src/routes/index.tsx - главная страница, на которой описано что представляет из себя сервис с примерами функционала
+2. src/routes/create-card.tsx - страница генерации карточки
