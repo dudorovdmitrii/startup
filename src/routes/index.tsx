@@ -186,7 +186,6 @@ function App() {
 
       {/* How it works */}
       <section id="how-it-works" className="mt-14">
-        <p className="island-kicker mb-2 text-center">Примеры использования</p>
         <h2 className="display-title mb-8 text-center text-3xl font-bold tracking-tight text-[var(--sea-ink)] sm:text-4xl">
           Как это работает
         </h2>
@@ -258,7 +257,6 @@ function App() {
 
       {/* Features */}
       <section id="features" className="mt-14">
-        <p className="island-kicker mb-2 text-center">Преимущества</p>
         <h2 className="display-title mb-8 text-center text-3xl font-bold tracking-tight text-[var(--sea-ink)] sm:text-4xl">
           Почему CardFlow
         </h2>
@@ -286,7 +284,6 @@ function App() {
 
       {/* Pricing */}
       <section id="pricing" className="mt-14">
-        <p className="island-kicker mb-2 text-center">Цены</p>
         <h2 className="display-title mb-8 text-center text-3xl font-bold tracking-tight text-[var(--sea-ink)] sm:text-4xl">
           Выберите свой план
         </h2>
