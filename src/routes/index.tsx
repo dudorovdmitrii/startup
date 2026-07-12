@@ -46,7 +46,7 @@ const howItWorksSteps = [
     description: 'Начните с загрузки вашего фото товара. Мы покажем, как будет выглядеть сгенерированная карточка.',
     component: (selectedConceptId: string | null, concepts: any[], selectedImageIndex: number) => (
       <div className="flex flex-col items-center justify-center space-y-4">
-        <img src="/shirts.webp" alt="Шаг 1: Загрузка фото" className="h-80 w-80 object-contain rounded-lg shadow-md" />
+        <img src="/shirts.webp" alt="Шаг 1: Загрузка фото" className="h-80 w-80 object-contain rounded-lg" />
         <p className="text-sm text-center text-[var(--sea-ink-soft)]">
           Представьте, что это ваше загруженное фото.
         </p>
@@ -63,7 +63,7 @@ const howItWorksSteps = [
             <div
               key={concept.id}
               className={`cursor-pointer rounded-lg border-2 p-4 transition-all duration-200 ${selectedConceptId === concept.id
-                ? 'border-[var(--lagoon-deep)] shadow-lg'
+                ? 'border-[var(--lagoon-deep)]'
                 : 'border-gray-200 hover:border-gray-300'
                 }`}
               onClick={() => { setSelectedConceptId(concept.id); setSelectedImageIndex(0); }}
@@ -95,7 +95,7 @@ const howItWorksSteps = [
           <img
             src={selectedConcept.images[selectedImageIndex]}
             alt="Сгенерированная карточка"
-            className="h-96 w-96 object-contain rounded-lg shadow-md"
+            className="h-96 w-96 object-contain rounded-lg"
           />
           <div className="flex space-x-2">
             {selectedConcept.images.map((image: string, index: number) => (
@@ -154,15 +154,13 @@ function App() {
     <main className="page-wrap px-4 pb-8 pt-14">
       {/* Hero */}
       <section className="island-shell rise-in relative overflow-hidden rounded-[2rem] px-6 py-10 sm:px-10 sm:py-16">
-        <div className="pointer-events-none absolute -left-20 -top-24 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(96,165,250,0.32),transparent_66%)]" />
-        <div className="pointer-events-none absolute -bottom-20 -right-20 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(59,130,246,0.18),transparent_66%)]" />
         <p className="island-kicker mb-3">Генератор карточек для маркетплейсов</p>
         <h1 className="display-title mb-5 max-w-3xl text-4xl leading-[1.02] font-bold tracking-tight text-[var(--sea-ink)] sm:text-6xl">
           Продающие карточки за&nbsp;минуты
         </h1>
         <p className="mb-8 max-w-3xl text-base text-[var(--sea-ink-soft)] sm:text-lg">
           Загрузите фото товара, выберите стиль оформления и отредактируйте текст
-          на&nbsp;карточке. Никакого дизайна с нуля — <span className="whitespace-nowrap">готовые шаблоны для <span style={{ color: '#005bff' }}>Ozon</span>&nbsp;и&nbsp;<span style={{ color: 'rgb(167, 58, 253)' }}>Wildberries</span>.</span>
+          на&nbsp;карточке. Никакого дизайна с нуля — <span className="whitespace-nowrap">готовые шаблоны для <span className='sm:text-2xl font-bold'>Ozon</span>&nbsp;и&nbsp;<span className='sm:text-2xl font-bold'>Wildberries</span>.</span>
         </p>
         <div className="flex flex-wrap gap-3">
           <Link
