@@ -45,11 +45,8 @@ const howItWorksSteps = [
     title: 'Загрузите фото товара',
     description: 'Начните с загрузки вашего фото товара. Мы покажем, как будет выглядеть сгенерированная карточка.',
     component: (selectedConceptId: string | null, concepts: any[], selectedImageIndex: number) => (
-      <div className="flex flex-col items-center justify-center space-y-4">
-        <img src="/shirts.webp" alt="Шаг 1: Загрузка фото" className="h-80 w-80 object-contain rounded-lg" />
-        <p className="text-sm text-center text-[var(--sea-ink-soft)]">
-          Представьте, что это ваше загруженное фото.
-        </p>
+      <div className="flex flex-col items-center justify-between space-y-4 h-full">
+        <img src="/shirts.webp" alt="Шаг 1: Загрузка фото" className="h-71 w-71 object-contain rounded-lg" />
       </div>
     ),
   },
@@ -57,30 +54,25 @@ const howItWorksSteps = [
     title: 'Выберите концепцию',
     description: 'Выберите одну из представленных концепций. Каждая концепция предлагает уникальный стиль оформления.',
     component: (selectedConceptId: string | null, concepts: any[], selectedImageIndex: number, setSelectedConceptId: (id: string) => void, setSelectedImageIndex: (index: number) => void) => (
-      <div className="flex flex-col items-center space-y-4">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          {concepts.map((concept) => (
-            <div
-              key={concept.id}
-              className={`cursor-pointer rounded-lg border-2 p-4 transition-all duration-200 ${selectedConceptId === concept.id
-                ? 'border-[var(--lagoon-deep)]'
-                : 'border-gray-200 hover:border-gray-300'
-                }`}
-              onClick={() => { setSelectedConceptId(concept.id); setSelectedImageIndex(0); }}
-            >
-              <img
-                src={concept.images[0]}
-                alt={concept.name}
-                className="mb-2 h-64 w-full object-cover rounded-md"
-              />
-              <p className="text-center text-sm font-semibold text-[var(--sea-ink)]">
-                {concept.name}
-              </p>
-            </div>
-          ))}
-        </div>
+      <div className="flex flex-col space-y-2 h-full w-full">
+        {concepts.map((concept) => (
+          <div
+            key={concept.id}
+            className={`cursor-pointer rounded-lg p-1 transition-all duration-200 flex items-center w-full ${selectedConceptId === concept.id
+              ? 'border-2 border-[var(--lagoon-deep)]' : ''}`}
+            onClick={() => { setSelectedConceptId(concept.id); setSelectedImageIndex(0); }}>
+            <img
+              src={concept.images[0]}
+              alt={concept.name}
+              className="h-20 w-16 object-cover rounded-md mr-2"
+            />
+            <p className="text-sm font-semibold text-[var(--sea-ink)]">
+              {concept.name}
+            </p>
+          </div>
+        ))}
       </div>
-    ),
+    )
   },
   {
     title: 'Отредактируйте текст',
@@ -91,23 +83,33 @@ const howItWorksSteps = [
         return <p className="text-center text-[var(--sea-ink-soft)]">Выберите концепцию на шаге 2.</p>;
       }
       return (
-        <div className="flex flex-col items-center space-y-4">
-          <img
-            src={selectedConcept.images[selectedImageIndex]}
-            alt="Сгенерированная карточка"
-            className="h-96 w-96 object-contain rounded-lg"
-          />
-          <div className="flex space-x-2">
+        <div className="flex flex-row space-x-4 h-full w-full">
+          {/* Vertical list of small photos */}
+          <div className="flex flex-col space-y-2 h-full justify-center">
             {selectedConcept.images.map((image: string, index: number) => (
-              <img
-                key={image}
-                src={image}
-                alt={`Вариант ${index + 1}`}
-                className={`cursor-pointer h-32 w-32 object-cover rounded-md border-2 ${selectedImageIndex === index ? 'border-[var(--lagoon-deep)]' : 'border-gray-200'
-                  }`}
+              <div
+                key={index}
+                className={`cursor-pointer transition-all duration-200 p-0.5
+                  ${selectedImageIndex === index ? 'border-2 border-[var(--lagoon-deep)]' : ''}
+                `}
                 onClick={() => setSelectedImageIndex(index)}
-              />
+              >
+                <img
+                  src={image}
+                  alt={`Вариант ${index + 1}`}
+                  className="h-20 w-16 object-cover"
+                />
+              </div>
             ))}
+          </div>
+
+          {/* Large selected photo */}
+          <div className="flex flex-grow">
+            <img
+              src={selectedConcept.images[selectedImageIndex]}
+              alt="Сгенерированная карточка"
+              className="h-64 w-64 object-contain rounded-lg"
+            />
           </div>
         </div>
       );
@@ -134,8 +136,7 @@ const features = [
 ] as const
 
 function App() {
-  const [currentStep, setCurrentStep] = useState(0)
-  const [selectedConceptId, setSelectedConceptId] = useState<string | null>(null)
+  const [selectedConceptId, setSelectedConceptId] = useState<string | null>('studio')
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
 
   // Concept options with their details
@@ -145,11 +146,6 @@ function App() {
     { id: 'lifestyle', name: 'Лайфстайл', images: ['/concept_2.webp', '/concept_2_2.webp', '/concept_2_3.webp'], description: 'Товар в реальной обстановке' },
   ]
 
-  useEffect(() => {
-    if (selectedConceptId) {
-      setSelectedImageIndex(0);
-    }
-  }, [selectedConceptId]);
   return (
     <main className="page-wrap px-4 pb-8 pt-14">
       {/* Hero */}
@@ -160,7 +156,7 @@ function App() {
         </h1>
         <p className="mb-8 max-w-3xl text-base text-[var(--sea-ink-soft)] sm:text-lg">
           Загрузите фото товара, выберите стиль оформления и отредактируйте текст
-          на&nbsp;карточке. Никакого дизайна с нуля — <span className="whitespace-nowrap">готовые шаблоны для <span className='sm:text-2xl font-bold'>Ozon</span>&nbsp;и&nbsp;<span className='sm:text-2xl font-bold'>Wildberries</span>.</span>
+          на&nbsp;карточке. Никакого дизайна с нуля — <span className="whitespace-nowrap">готовые шаблоны для <span>Ozon</span>&nbsp;и&nbsp;<span>Wildberries</span>.</span>
         </p>
         <div className="flex flex-wrap gap-3">
           <Link
@@ -188,68 +184,26 @@ function App() {
           Как это работает
         </h2>
 
-        <div className="flex flex-col items-center justify-center space-y-8">
-          {/* Step Navigation */}
-          <div className="flex space-x-4">
-            {howItWorksSteps.map((step, index) => (
-              <button
-                key={step.title}
-                className={`rounded-full px-4 py-2 text-sm font-semibold
-    ${currentStep === index
-      ? 'bg-[color-mix(in_oklab,var(--lagoon),transparent_76%)] text-[var(--lagoon-deep)] dark:bg-[color-mix(in_oklab,var(--lagoon),transparent_60%)] dark:text-[var(--lagoon)] cursor-pointer'
-      : 'bg-[var(--sand)] text-[var(--sea-ink-soft)] hover:bg-[var(--line)] dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700 cursor-pointer'
-    }
-                ${index === 2 && !selectedConceptId
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed border-gray-400 opacity-100 dark:bg-gray-700 dark:text-gray-500 dark:border-gray-600'
-                  : ''
-                }`}onClick={() => setCurrentStep(index)}
-                disabled={index === 2 && !selectedConceptId}
-              >
-                Шаг {index + 1}
-              </button>
-            ))}
-          </div>
-
-          {/* Step Content */}
-          <div className="island-shell feature-card rise-in rounded-2xl p-6 w-full max-w-3xl min-h-[300px] flex flex-col items-center justify-center">
-            <h3 className="mb-2 text-lg font-semibold text-[var(--sea-ink)]">
-              {howItWorksSteps[currentStep].title}
-            </h3>
-            <p className="m-0 mb-4 text-sm leading-relaxed text-[var(--sea-ink-soft)] text-center">
-              {howItWorksSteps[currentStep].description}
-            </p>
-            <div className="mt-4">
-              {howItWorksSteps[currentStep].component(
-                selectedConceptId,
-                concepts,
-                selectedImageIndex,
-                setSelectedConceptId,
-                setSelectedImageIndex
-              )}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+          {howItWorksSteps.map((step, index) => (
+            <div key={index} className=" rise-in rounded-2xl p-2 flex flex-col items-center text-center">
+              <h3 className="text-lg font-semibold text-[var(--sea-ink)]">
+                {step.title}
+              </h3>
+              <p className="h-[100px] m-0 text-sm leading-relaxed text-[var(--sea-ink-soft)]">
+                {step.description}
+              </p>
+              <div className="mt-4 w-full overflow-hidden flex items-center justify-center">
+                {step.component(
+                  selectedConceptId,
+                  concepts,
+                  selectedImageIndex,
+                  setSelectedConceptId,
+                  setSelectedImageIndex
+                )}
+              </div>
             </div>
-          </div>
-
-          {/* Navigation Buttons */}
-          <div className="flex space-x-4">
-            {currentStep > 0 && (
-              <button
-                className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--foam)] px-5 py-2.5 text-sm font-semibold text-[var(--sea-ink)] no-underline transition hover:-translate-y-0.5 hover:border-[var(--sea-ink-soft)] cursor-pointer"
-                onClick={() => setCurrentStep(currentStep - 1)}
-              >
-                Предыдущий шаг
-              </button>
-            )}
-            {currentStep < howItWorksSteps.length - 1 && (
-              <button
-                className={`inline-flex items-center gap-2 rounded-full border border-[var(--lagoon)] bg-[color-mix(in_oklab,var(--lagoon),transparent_86%)] px-5 py-2.5 text-sm font-semibold text-[var(--lagoon-deep)] no-underline transition hover:-translate-y-0.5 hover:bg-[color-mix(in_oklab,var(--lagoon),transparent_76%)] cursor-pointer ${currentStep === 1 && !selectedConceptId ? 'opacity-50 cursor-not-allowed' : ''}`}
-                onClick={() => setCurrentStep(currentStep + 1)}
-                disabled={currentStep === 1 && !selectedConceptId}
-              >
-                Следующий шаг
-                <ArrowRight className="h-4 w-4" />
-              </button>
-            )}
-          </div>
+          ))}
         </div>
       </section>
 
