@@ -1,5 +1,8 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { userStore } from '#/store/store'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { useSelector } from '@tanstack/react-store'
 import { Plus, Image as ImageIcon } from 'lucide-react'
+import { useEffect } from 'react'
 
 // Мокированные данные проектов (соответствуют ProjectListItem из openapi.yaml)
 const mockProjects = [
@@ -22,6 +25,19 @@ export const Route = createFileRoute('/projects/')({
 })
 
 function ProjectsPage() {
+  const isLoggedin = useSelector(userStore, (state) => state.isLoggedIn)
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (!isLoggedin) {
+      navigate({ to: '/login', replace: true })
+    }
+  }, [navigate, isLoggedin])
+
+  return isLoggedin ? <_ProjectsPage /> : null;
+}
+
+function _ProjectsPage() {
   return (
     <div className="page-wrap px-4 pb-8 pt-10">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">

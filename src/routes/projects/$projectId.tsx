@@ -1,5 +1,8 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { userStore } from '#/store/store'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { useSelector } from '@tanstack/react-store'
 import { ArrowLeft, Image as ImageIcon, Download } from 'lucide-react'
+import { useEffect } from 'react'
 
 // Мокированные детали проекта (ProjectDetail)
 const mockProjectDetails: Record<string, any> = {
@@ -62,6 +65,44 @@ export const Route = createFileRoute('/projects/$projectId')({
 })
 
 function ProjectDetailPage() {
+  const isLoggedin = useSelector(userStore, (state) => state.isLoggedIn)
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (!isLoggedin) {
+      navigate({ to: '/login', replace: true })
+    }
+  }, [navigate, isLoggedin])
+
+  return isLoggedin ? <_ProjectDetailPage /> : null
+}
+
+function _ProjectDetailPage() {
+  const handleDownload = async (url: string, filename: string) => {
+    try {
+      const response = await fetch(url)
+      const blob = await response.blob()
+      const blobUrl = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = blobUrl
+      link.download = filename || 'download.png'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(blobUrl)
+    } catch (error) {
+      console.error('Download failed', error)
+      // Fallback
+      const link = document.createElement('a')
+      link.href = url
+      link.download = filename || 'download.png'
+      link.target = '_blank'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    }
+  }
+
   const { projectId } = Route.useParams()
   const project = mockProjectDetails[projectId]
 
@@ -176,7 +217,13 @@ function ProjectDetailPage() {
                       {/* Оверлей при наведении */}
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 backdrop-blur-sm">
                         <button
-                          className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-white hover:bg-white hover:text-black transition-colors"
+                          onClick={() =>
+                            handleDownload(
+                              res.result_url,
+                              `result-${res.id}.webp`,
+                            )
+                          }
+                          className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-white hover:bg-white hover:text-black transition-colors cursor-pointer"
                           title="Скачать"
                         >
                           <Download className="h-5 w-5" />

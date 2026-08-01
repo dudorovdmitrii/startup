@@ -228,7 +228,7 @@ function LoginPage() {
                   </p>
                 )}
 
-                <Button type="submit" className="w-full font-semibold">
+                <Button type="submit" className="w-full font-semibold cursor-pointer">
                   Зарегистрироваться
                 </Button>
 
@@ -247,7 +247,7 @@ function LoginPage() {
                   type="button"
                   variant="outline"
                   onClick={handleYandexAuth}
-                  className="w-full font-medium"
+                  className="w-full font-medium cursor-pointer"
                 >
                   Войти через Яндекс ID
                 </Button>

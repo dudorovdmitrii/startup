@@ -1,6 +1,18 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useSelector } from '@tanstack/react-store'
-import { Type, Sparkles, ArrowRight, ShoppingBag } from 'lucide-react'
+import {
+  Type,
+  Sparkles,
+  ArrowRight,
+  ShoppingBag,
+  HelpCircle,
+} from 'lucide-react'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '#/components/ui/accordion'
 import { useState } from 'react'
 import { userStore } from '#/store/store'
 
@@ -11,11 +23,7 @@ const pricingPlans = [
     name: 'Стартовый',
     description: 'Идеально для теста.',
     price: '149₽',
-    features: [
-      '10 генераций',
-      'Все доступные шаблоны',
-      'Базовая поддержка',
-    ],
+    features: ['10 генераций', 'Все доступные шаблоны', 'Базовая поддержка'],
   },
   {
     name: 'Базовый',
@@ -42,24 +50,46 @@ const pricingPlans = [
 const howItWorksSteps = [
   {
     title: 'Загрузите фото товара',
-    description: 'Начните с загрузки вашего фото товара. Мы покажем, как будет выглядеть сгенерированная карточка.',
-    component: (selectedConceptId: string | null, concepts: any[], selectedImageIndex: number) => (
+    description:
+      'Начните с загрузки вашего фото товара. Мы покажем, как будет выглядеть сгенерированная карточка.',
+    component: (
+      selectedConceptId: string | null,
+      concepts: any[],
+      selectedImageIndex: number,
+    ) => (
       <div className="flex flex-col items-center justify-between space-y-4 h-full">
-        <img src="/shirts.webp" alt="Шаг 1: Загрузка фото" className="h-71 object-contain rounded-lg" />
+        <img
+          src="/shirts.webp"
+          alt="Шаг 1: Загрузка фото"
+          className="h-71 object-contain rounded-lg"
+        />
       </div>
     ),
   },
   {
     title: 'Выберите концепцию',
-    description: 'Выберите одну из представленных концепций. Каждая концепция предлагает уникальный стиль оформления.',
-    component: (selectedConceptId: string | null, concepts: any[], selectedImageIndex: number, setSelectedConceptId: (id: string) => void, setSelectedImageIndex: (index: number) => void) => (
+    description:
+      'Выберите одну из представленных концепций. Каждая концепция предлагает уникальный стиль оформления.',
+    component: (
+      selectedConceptId: string | null,
+      concepts: any[],
+      selectedImageIndex: number,
+      setSelectedConceptId: (id: string) => void,
+      setSelectedImageIndex: (index: number) => void,
+    ) => (
       <div className="flex flex-col space-y-2 h-full w-full p-1">
         {concepts.map((concept) => (
           <div
             key={concept.id}
             className={`cursor-pointer rounded-lg p-1 transition-all duration-200 flex items-center w-full ${selectedConceptId === concept.id
-              ? 'outline-2 outline-[var(--lagoon-deep)]' : ''}`}
-            onClick={() => { setSelectedConceptId(concept.id); setSelectedImageIndex(0); }}>
+                ? 'outline-2 outline-[var(--lagoon-deep)]'
+                : ''
+              }`}
+            onClick={() => {
+              setSelectedConceptId(concept.id)
+              setSelectedImageIndex(0)
+            }}
+          >
             <img
               src={concept.images[0]}
               alt={concept.name}
@@ -71,15 +101,26 @@ const howItWorksSteps = [
           </div>
         ))}
       </div>
-    )
+    ),
   },
   {
     title: 'Отредактируйте текст',
-    description: 'Выберите один из трех вариантов дизайна вашей карточки с уже измененным текстом.',
-    component: (selectedConceptId: string | null, concepts: any[], selectedImageIndex: number, setSelectedConceptId: (id: string) => void, setSelectedImageIndex: (index: number) => void) => {
-      const selectedConcept = concepts.find(c => c.id === selectedConceptId);
+    description:
+      'Выберите один из трех вариантов дизайна вашей карточки с уже измененным текстом.',
+    component: (
+      selectedConceptId: string | null,
+      concepts: any[],
+      selectedImageIndex: number,
+      setSelectedConceptId: (id: string) => void,
+      setSelectedImageIndex: (index: number) => void,
+    ) => {
+      const selectedConcept = concepts.find((c) => c.id === selectedConceptId)
       if (!selectedConcept) {
-        return <p className="text-center text-[var(--sea-ink-soft)]">Выберите концепцию на шаге 2.</p>;
+        return (
+          <p className="text-center text-[var(--sea-ink-soft)]">
+            Выберите концепцию на шаге 2.
+          </p>
+        )
       }
       return (
         <div className="flex flex-row space-x-2 h-full w-full">
@@ -111,16 +152,45 @@ const howItWorksSteps = [
             />
           </div>
         </div>
-      );
+      )
     },
   },
 ] as const
+
+const faqs = [
+  {
+    question: 'Как работает сервис?',
+    answer:
+      'Вы загружаете фото товара, выбираете одну из концепций, а нейросеть сама убирает фон, добавляет дизайн и генерирует готовую карточку.',
+  },
+  {
+    question: 'Сколько времени занимает генерация?',
+    answer:
+      'Обычно генерация одной карточки занимает от 30 секунд до 2 минут в зависимости от сложности композиции.',
+  },
+  {
+    question: 'Можно ли редактировать текст на карточке?',
+    answer:
+      'Да, после генерации вы сможете изменить текст, шрифты и расположение надписей.',
+  },
+  {
+    question: 'Для каких маркетплейсов подходят карточки?',
+    answer:
+      'Наши шаблоны оптимизированы под требования и форматы Ozon и Wildberries.',
+  },
+  {
+    question: 'Что будет, если у меня закончились генерации?',
+    answer:
+      'Вы всегда можете докупить дополнительный пакет генераций в любой момент. Они не сгорают.',
+  },
+]
 
 const features = [
   {
     icon: Sparkles,
     title: 'Готово за минуты',
-    description: 'Не нужен дизайнер или Photoshop — ИИ создаст карточку автоматически.',
+    description:
+      'Не нужен дизайнер или Photoshop — ИИ создаст карточку автоматически.',
   },
   {
     icon: ShoppingBag,
@@ -135,32 +205,55 @@ const features = [
 ] as const
 
 function App() {
-  const [selectedConceptId, setSelectedConceptId] = useState<string | null>('studio')
+  const [selectedConceptId, setSelectedConceptId] = useState<string | null>(
+    'studio',
+  )
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const isLoggedIn = useSelector(userStore, (state) => state.isLoggedIn)
 
   // Concept options with their details
   const concepts = [
-    { id: 'studio', name: 'Студийная съёмка', images: ['/shirts.webp', '/shirts_2.webp', '/shirts_3.webp'], description: 'Чистый фон, идеальное освещение' },
-    { id: 'model', name: 'На модели', images: ['/concept_1.webp', '/concept_1_2.webp', '/concept_1_3.webp'], description: 'Показываем товар в использовании' },
-    { id: 'lifestyle', name: 'Лайфстайл', images: ['/concept_2.webp', '/concept_2_2.webp', '/concept_2_3.webp'], description: 'Товар в реальной обстановке' },
+    {
+      id: 'studio',
+      name: 'Студийная съёмка',
+      images: ['/shirts.webp', '/shirts_2.webp', '/shirts_3.webp'],
+      description: 'Чистый фон, идеальное освещение',
+    },
+    {
+      id: 'model',
+      name: 'На модели',
+      images: ['/concept_1.webp', '/concept_1_2.webp', '/concept_1_3.webp'],
+      description: 'Показываем товар в использовании',
+    },
+    {
+      id: 'lifestyle',
+      name: 'Лайфстайл',
+      images: ['/concept_2.webp', '/concept_2_2.webp', '/concept_2_3.webp'],
+      description: 'Товар в реальной обстановке',
+    },
   ]
 
   return (
     <main className="page-wrap px-4 pb-8 pt-14">
       {/* Hero */}
       <section className="island-shell rise-in relative overflow-hidden rounded-[2rem] px-6 py-10 sm:px-10 sm:py-16">
-        <p className="island-kicker mb-3">Генератор карточек для маркетплейсов</p>
+        <p className="island-kicker mb-3">
+          Генератор карточек для маркетплейсов
+        </p>
         <h1 className="display-title mb-5 max-w-3xl text-4xl leading-[1.02] font-bold tracking-tight text-[var(--sea-ink)] sm:text-6xl">
           Продающие карточки за&nbsp;минуты
         </h1>
         <p className="mb-8 max-w-3xl text-base text-[var(--sea-ink-soft)] sm:text-lg">
-          Загрузите фото товара, выберите стиль оформления и отредактируйте текст
-          на&nbsp;карточке. Никакого дизайна с нуля — <span className="whitespace-nowrap">готовые шаблоны для <span>Ozon</span>&nbsp;и&nbsp;<span>Wildberries</span>.</span>
+          Загрузите фото товара, выберите стиль оформления и отредактируйте
+          текст на&nbsp;карточке. Никакого дизайна с нуля —{' '}
+          <span className="whitespace-nowrap">
+            готовые шаблоны для <span>Ozon</span>&nbsp;и&nbsp;
+            <span>Wildberries</span>.
+          </span>
         </p>
         <div className="flex flex-wrap gap-3">
           <Link
-            to={isLoggedIn ? "/create-card" : "/login"}
+            to={isLoggedIn ? '/create-card' : '/login'}
             className="inline-flex items-center gap-2 rounded-full border border-[var(--lagoon)] bg-[color-mix(in_oklab,var(--lagoon),transparent_86%)] px-5 py-2.5 text-sm font-semibold text-[var(--lagoon-deep)] no-underline transition hover:-translate-y-0.5 hover:bg-[color-mix(in_oklab,var(--lagoon),transparent_76%)] cursor-pointer"
           >
             Создать карточку
@@ -170,7 +263,9 @@ function App() {
             type="button"
             className="rounded-full border border-[var(--line)] bg-[var(--foam)] px-5 py-2.5 text-sm font-semibold text-[var(--sea-ink)] no-underline transition hover:-translate-y-0.5 hover:border-[var(--sea-ink-soft)] cursor-pointer"
             onClick={() => {
-              document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
+              document
+                .getElementById('how-it-works')
+                ?.scrollIntoView({ behavior: 'smooth' })
             }}
           >
             Как это работает
@@ -186,7 +281,10 @@ function App() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
           {howItWorksSteps.map((step, index) => (
-            <div key={index} className=" rise-in rounded-2xl p-2 flex flex-col items-center text-center">
+            <div
+              key={index}
+              className=" rise-in rounded-2xl p-2 flex flex-col items-center text-center"
+            >
               <h3 className="text-lg font-semibold text-[var(--sea-ink)]">
                 {step.title}
               </h3>
@@ -199,7 +297,7 @@ function App() {
                   concepts,
                   selectedImageIndex,
                   setSelectedConceptId,
-                  setSelectedImageIndex
+                  setSelectedImageIndex,
                 )}
               </div>
             </div>
@@ -233,7 +331,6 @@ function App() {
         </div>
       </section>
 
-
       {/* Pricing */}
       <section id="pricing" className="mt-14">
         <h2 className="display-title mb-8 text-center text-3xl font-bold tracking-tight text-[var(--sea-ink)] sm:text-4xl">
@@ -246,21 +343,40 @@ function App() {
               className="island-shell feature-card rise-in flex flex-col rounded-2xl p-6"
               style={{ animationDelay: `${index * 100 + 80}ms` }}
             >
-              <h3 className="mb-2 text-xl font-semibold text-[var(--sea-ink)]">{plan.name}</h3>
-              <p className="mb-4 text-sm text-[var(--sea-ink-soft)]">{plan.description}</p>
+              <h3 className="mb-2 text-xl font-semibold text-[var(--sea-ink)]">
+                {plan.name}
+              </h3>
+              <p className="mb-4 text-sm text-[var(--sea-ink-soft)]">
+                {plan.description}
+              </p>
               <div className="mb-6">
-                <span className="text-4xl font-bold text-[var(--sea-ink)]">{plan.price}</span>
+                <span className="text-4xl font-bold text-[var(--sea-ink)]">
+                  {plan.price}
+                </span>
               </div>
               <ul className="mb-6 flex-grow space-y-2 text-sm text-[var(--sea-ink-soft)]">
                 {plan.features.map((feature, i) => (
                   <li key={i} className="flex items-center">
-                    <svg className="mr-2 h-4 w-4 text-[var(--lagoon-deep)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                    <svg
+                      className="mr-2 h-4 w-4 text-[var(--lagoon-deep)]"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M5 13l4 4L19 7"
+                      ></path>
+                    </svg>
                     {feature}
                   </li>
                 ))}
               </ul>
               <Link
-                to={isLoggedIn ? "/create-card" : "/login"}
+                to={isLoggedIn ? '/create-card' : '/login'}
                 className="inline-flex items-center justify-center gap-2 rounded-full border border-[var(--lagoon)] bg-[color-mix(in_oklab,var(--lagoon),transparent_86%)] px-6 py-3 text-sm font-semibold text-[var(--lagoon-deep)] no-underline transition hover:-translate-y-0.5 hover:bg-[color-mix(in_oklab,var(--lagoon),transparent_76%)] cursor-pointer mt-auto"
               >
                 Начать с {plan.name}
@@ -271,8 +387,32 @@ function App() {
         </div>
       </section>
 
+      {/* FAQ */}
+      <section id="faq" className="mt-14 max-w-3xl mx-auto">
+        <h2 className="display-title mb-8 text-center text-3xl font-bold tracking-tight text-[var(--sea-ink)] sm:text-4xl">
+          Частые вопросы
+        </h2>
+        <div className="island-shell rise-in rounded-2xl p-6 sm:p-8">
+          <Accordion type="single" collapsible className="w-full">
+            {faqs.map((faq, index) => (
+              <AccordionItem key={index} value={`item-${index}`}>
+                <AccordionTrigger className="text-left text-base font-semibold text-[var(--sea-ink)] hover:text-[var(--lagoon-deep)] cursor-pointer">
+                  {faq.question}
+                </AccordionTrigger>
+                <AccordionContent className="text-[var(--sea-ink-soft)] leading-relaxed">
+                  {faq.answer}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
+      </section>
+
       {/* CTA */}
-      <section id="cta" className="island-shell mt-14 rounded-[2rem] p-8 text-center sm:p-12">
+      <section
+        id="cta"
+        className="island-shell mt-14 rounded-[2rem] p-8 text-center sm:p-12"
+      >
         <h2 className="display-title mb-4 text-3xl font-bold tracking-tight text-[var(--sea-ink)] sm:text-4xl">
           Готовы создать первую карточку?
         </h2>
@@ -281,7 +421,7 @@ function App() {
           за&nbsp;пару минут.
         </p>
         <Link
-          to={isLoggedIn ? "/create-card" : "/login"}
+          to={isLoggedIn ? '/create-card' : '/login'}
           className="inline-flex items-center gap-2 rounded-full border border-[var(--lagoon)] bg-[color-mix(in_oklab,var(--lagoon),transparent_86%)] px-6 py-3 text-sm font-semibold text-[var(--lagoon-deep)] no-underline transition hover:-translate-y-0.5 hover:bg-[color-mix(in_oklab,var(--lagoon),transparent_76%)] cursor-pointer"
         >
           Начать бесплатно
@@ -289,5 +429,5 @@ function App() {
         </Link>
       </section>
     </main>
-  );
+  )
 }
