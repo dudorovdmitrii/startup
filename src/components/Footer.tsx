@@ -3,7 +3,7 @@ import { useRouterState } from '@tanstack/react-router'
 export default function Footer() {
   const year = new Date().getFullYear()
   const { location } = useRouterState()
-  const hideNavigation = location.pathname === '/create-card'
+  const hideNavigation = location.pathname !== '/'
 
   return (
     <footer className="mt-20 border-t border-[var(--line)] px-4 pb-14 pt-10 text-[var(--sea-ink-soft)]">
@@ -17,7 +17,7 @@ export default function Footer() {
               Как это работает
             </a>
             <a href="#pricing" className="nav-link">
-              Тарифы
+              Пакеты
             </a>
           </div>
         )}

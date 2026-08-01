@@ -1,41 +1,40 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { Upload, Palette, Type, Sparkles, ArrowRight, ShoppingBag } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { useSelector } from '@tanstack/react-store'
+import { Type, Sparkles, ArrowRight, ShoppingBag } from 'lucide-react'
+import { useState } from 'react'
+import { userStore } from '#/store/store'
 
 export const Route = createFileRoute('/')({ component: App })
 
 const pricingPlans = [
   {
-    name: 'Базовый',
-    description: 'Идеально для начинающих продавцов.',
-    price: '0₽',
+    name: 'Стартовый',
+    description: 'Идеально для теста.',
+    price: '149₽',
     features: [
-      '5 генераций в месяц',
-      'Стандартные шаблоны',
+      '10 генераций',
+      'Все доступные шаблоны',
       'Базовая поддержка',
     ],
   },
   {
-    name: 'Профи',
-    description: 'Для активных продавцов на маркетплейсах.',
-    price: '990₽',
+    name: 'Базовый',
+    description: 'Для активных продавцов.',
+    price: '490₽',
     features: [
-      '50 генераций в месяц',
-      'Расширенные шаблоны',
+      '50 генераций',
+      'Все доступные шаблоны',
       'Приоритетная поддержка',
-      'История генераций',
     ],
   },
   {
-    name: 'Бизнес',
-    description: 'Для крупных брендов и больших объемов.',
-    price: '2990₽',
+    name: 'Профи',
+    description: 'Для больших объемов.',
+    price: '890₽',
     features: [
-      'Неограниченные генерации',
-      'Все шаблоны',
+      '100 генераций',
+      'Все доступные шаблоны',
       'Премиум поддержка 24/7',
-      'Командный доступ',
-      'Индивидуальные интеграции',
     ],
   },
 ]
@@ -138,6 +137,7 @@ const features = [
 function App() {
   const [selectedConceptId, setSelectedConceptId] = useState<string | null>('studio')
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
+  const isLoggedIn = useSelector(userStore, (state) => state.isLoggedIn)
 
   // Concept options with their details
   const concepts = [
@@ -160,7 +160,7 @@ function App() {
         </p>
         <div className="flex flex-wrap gap-3">
           <Link
-            to="/create-card"
+            to={isLoggedIn ? "/create-card" : "/login"}
             className="inline-flex items-center gap-2 rounded-full border border-[var(--lagoon)] bg-[color-mix(in_oklab,var(--lagoon),transparent_86%)] px-5 py-2.5 text-sm font-semibold text-[var(--lagoon-deep)] no-underline transition hover:-translate-y-0.5 hover:bg-[color-mix(in_oklab,var(--lagoon),transparent_76%)] cursor-pointer"
           >
             Создать карточку
@@ -237,7 +237,7 @@ function App() {
       {/* Pricing */}
       <section id="pricing" className="mt-14">
         <h2 className="display-title mb-8 text-center text-3xl font-bold tracking-tight text-[var(--sea-ink)] sm:text-4xl">
-          Выберите свой план
+          Выберите пакет генераций
         </h2>
         <div className="grid gap-6 md:grid-cols-3">
           {pricingPlans.map((plan, index) => (
@@ -250,7 +250,6 @@ function App() {
               <p className="mb-4 text-sm text-[var(--sea-ink-soft)]">{plan.description}</p>
               <div className="mb-6">
                 <span className="text-4xl font-bold text-[var(--sea-ink)]">{plan.price}</span>
-                <span className="text-lg text-[var(--sea-ink-soft)]">/месяц</span>
               </div>
               <ul className="mb-6 flex-grow space-y-2 text-sm text-[var(--sea-ink-soft)]">
                 {plan.features.map((feature, i) => (
@@ -261,7 +260,7 @@ function App() {
                 ))}
               </ul>
               <Link
-                to="/create-card"
+                to={isLoggedIn ? "/create-card" : "/login"}
                 className="inline-flex items-center justify-center gap-2 rounded-full border border-[var(--lagoon)] bg-[color-mix(in_oklab,var(--lagoon),transparent_86%)] px-6 py-3 text-sm font-semibold text-[var(--lagoon-deep)] no-underline transition hover:-translate-y-0.5 hover:bg-[color-mix(in_oklab,var(--lagoon),transparent_76%)] cursor-pointer mt-auto"
               >
                 Начать с {plan.name}
@@ -282,7 +281,7 @@ function App() {
           за&nbsp;пару минут.
         </p>
         <Link
-          to="/create-card"
+          to={isLoggedIn ? "/create-card" : "/login"}
           className="inline-flex items-center gap-2 rounded-full border border-[var(--lagoon)] bg-[color-mix(in_oklab,var(--lagoon),transparent_86%)] px-6 py-3 text-sm font-semibold text-[var(--lagoon-deep)] no-underline transition hover:-translate-y-0.5 hover:bg-[color-mix(in_oklab,var(--lagoon),transparent_76%)] cursor-pointer"
         >
           Начать бесплатно

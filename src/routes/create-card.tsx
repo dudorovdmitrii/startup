@@ -1,5 +1,7 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { useState } from 'react'
+import { userStore } from '#/store/store'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useSelector } from '@tanstack/react-store'
+import { useEffect, useState } from 'react'
 
 export const Route = createFileRoute('/create-card')({
   component: CreateCardPage,
@@ -12,11 +14,35 @@ const concepts = [
 ]
 
 function CreateCardPage() {
+  const isLoggedin = useSelector(userStore, (state) => state.isLoggedIn)
+  const navigate = useNavigate()
+
+  // Если уже залогинены — сразу на /create-card
+  useEffect(() => {
+    if (!isLoggedin) {
+      navigate({ to: '/login', replace: true })
+    }
+  }, [navigate, isLoggedin])
+
+  return isLoggedin ? <_CreateCardPage /> : null;
+}
+
+
+function _CreateCardPage() {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null)
   const [selectedConceptId, setSelectedConceptId] = useState<string | null>(null)
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null)
   const [fileName, setFileName] = useState<string>('')
   const [isLoading, setIsLoading] = useState(false)
+  const isLoggedin = useSelector(userStore, (state) => state.isLoggedIn)
+  const navigate = useNavigate()
+
+  // Если уже залогинены — сразу на /create-card
+  useEffect(() => {
+    if (!isLoggedin) {
+      navigate({ to: '/login', replace: true })
+    }
+  }, [navigate, isLoggedin])
 
   // Placeholder for image generation
   const generateCard = async () => {
@@ -79,7 +105,7 @@ function CreateCardPage() {
               className={`cursor-pointer rounded-lg border-2 p-4 transition-all duration-200 ${selectedConceptId === concept.id
                 ? 'border-[var(--lagoon-deep)] shadow-lg'
                 : 'border-gray-200 hover:border-gray-300'
-              }`}
+                }`}
               onClick={() => setSelectedConceptId(concept.id)}
             >
               <img
@@ -120,7 +146,7 @@ function CreateCardPage() {
             ${isLoading || !uploadedImage || !selectedConceptId
               ? 'bg-gray-300 text-gray-500 cursor-not-allowed border-gray-400 dark:bg-gray-700 dark:text-gray-500 dark:border-gray-600'
               : 'border border-[var(--lagoon)] bg-[color-mix(in_oklab,var(--lagoon),transparent_86%)] text-[var(--lagoon-deep)] hover:-translate-y-0.5 hover:bg-[color-mix(in_oklab,var(--lagoon),transparent_76%)] cursor-pointer'
-            }`}disabled={isLoading || !uploadedImage || !selectedConceptId}
+            }`} disabled={isLoading || !uploadedImage || !selectedConceptId}
         >
           {isLoading ? 'Генерация...' : 'Сгенерировать'}
           {isLoading && (

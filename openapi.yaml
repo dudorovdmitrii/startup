@@ -1,0 +1,1322 @@
+# API Contract v0.2
+#
+# Auth: telegram / web / refresh → access + refresh JWT
+# Projects: create (1–4 photos), list, get, patch metadata, generate
+# Generation: basic options, quota, jobs
+# Profile / shop: balance, history, packs, payments
+# Client-side content: FAQ, examples, advanced generation settings
+
+openapi: 3.0.3
+info:
+  title: Pizdentika Backend API
+  version: 0.2.0
+  description: |
+    Контракт REST API для Telegram-бота и веб/мобильного фронтенда.
+
+    ## Клиенты
+    - **Telegram-бот** — основной сценарий генерации и профиля
+    - **Web / app** — тот же API, вход через логин/пароль
+
+    ## Авторизация
+    После login клиент получает пару JWT (`access_token` + `refresh_token`).
+    Все защищённые ручки вызываются с заголовком `Authorization: Bearer <access_token>`.
+    Когда access истёк — `POST /auth/refresh`; если refresh невалиден — повторный login.
+
+    ## Типичный happy path генерации
+    1. Auth → 2. `POST /projects/create` → 3. (опц.) `PATCH` метаданных / `GET /categories`
+    → 4. `GET /generation/options` → 5. `POST /wallet/quota` → 6. `POST …/generate`
+    → 7. poll `GET /jobs/{id}` → 8. показ результата / обновление карточки проекта.
+
+    FAQ, примеры работ и расширенные настройки генерации задаются на клиентах.
+  contact:
+    name: Client team (bot + frontend)
+
+servers:
+  - url: https://api.example.com/api/v1
+    description: Production (target)
+  - url: http://localhost:8000/api/v1
+    description: Local / mock (target)
+
+tags:
+  - name: Auth
+    description: |
+      Вход пользователя и обновление JWT.
+      Без успешного auth остальные ручки (кроме `/health`) недоступны.
+  - name: Projects
+    description: |
+      Проекты пользователя: создание из фото, список, карточка, правка метаданных,
+      запуск генерации по существующему проекту.
+  - name: Generation
+    description: |
+      Обычные опции настроек, проверка квоты, запуск job и опрос статуса.
+  - name: Profile
+    description: |
+      Баланс искр, счётчики, история транзакций, удаление аккаунта.
+  - name: Shop
+    description: |
+      Пакеты искр и платежи (пополнение баланса).
+  - name: Content
+    description: |
+      Справочники для UI (дерево категорий товара).
+  - name: System
+    description: |
+      Служебные ручки (health для оркестраторов и мониторинга).
+
+security:
+  - bearerAuth: []
+
+paths:
+  /health:
+    get:
+      tags: [System]
+      summary: Health check
+      security: []
+      operationId: healthCheck
+      description: |
+        **Зачем:** быстрая проверка, что сервис жив и принимает HTTP.
+
+        **Когда вызывается:**
+        - Docker / Kubernetes liveness·readiness probes
+        - CI и локальный smoke-check перед прогоном бота
+        - Мониторинг (uptime)
+
+        Не требует авторизации. Не использует бизнес-логику пользователя.
+      responses:
+        '200':
+          description: Сервис доступен
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status:
+                    type: string
+                    example: ok
+
+  /auth/telegram:
+    post:
+      tags: [Auth]
+      summary: Авторизация через Telegram (бот / WebApp)
+      security: []
+      operationId: authTelegram
+      description: |
+        **Зачем:** выдать пару JWT и профиль пользователя, идентифицированного
+        через Telegram (`telegram_id` и опционально `init_data` WebApp).
+
+        **Когда вызывается:**
+        - Telegram-бот: на апдейте, если в кэше (Redis) нет валидных токенов
+          и refresh недоступен / истёк
+        - Telegram WebApp: при первом открытии мини-приложения
+        - После удаления аккаунта / очистки кэша — повторный вход
+
+        **Что делает сервер:** находит или создаёт пользователя по `telegram_id`,
+        возвращает `access_token` + `refresh_token` + `user`.
+
+        Клиент сохраняет оба токена (бот — в Redis с TTL) и дальше ходит
+        с `Authorization: Bearer <access_token>`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TelegramAuthRequest'
+      responses:
+        '200':
+          description: Успешный вход — токены и профиль
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /auth/web:
+    post:
+      tags: [Auth]
+      summary: Авторизация логин + пароль (веб / приложение)
+      security: []
+      operationId: authWeb
+      description: |
+        **Зачем:** вход для веб-сайта и мобильного приложения по логину и паролю.
+        Тот же формат ответа, что у `/auth/telegram` (пара JWT + user).
+
+        **Когда вызывается:**
+        - Экран «Войти» на фронтенде
+        - Повторный login после logout или если refresh вернул 401
+
+        **Не используется** Telegram-ботом (у бота только telegram-auth).
+
+        При неверных учётных данных — `401`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebAuthRequest'
+      responses:
+        '200':
+          description: Успешный вход — access + refresh JWT и профиль
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Обновить пару access + refresh
+      security: []
+      operationId: refreshTokens
+      description: |
+        **Зачем:** получить новую пару токенов без повторного ввода логина /
+        без повторного telegram-auth, когда `access_token` истёк.
+
+        **Когда вызывается:**
+        - Клиент получил `401` на защищённой ручке и имеет сохранённый refresh
+        - Бот: перед запросом, если access протух, а refresh ещё валиден
+        - Плановое обновление access по `expires_in` (если клиент так делает)
+
+        **Rotation:** старый refresh после успешного ответа считается
+        недействительным; клиент обязан сохранить **новую** пару целиком.
+
+        Если refresh невалиден / отозван / уже использован — `401`, нужен
+        полный login (`/auth/telegram` или `/auth/web`).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        '200':
+          description: Новая пара токенов (rotation)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenPair'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /categories:
+    get:
+      tags: [Content]
+      summary: Дерево категорий товара
+      operationId: getCategories
+      description: |
+        **Зачем:** отдать иерархию категорий (Одежда → Футболки и т.д.) для
+        UI выбора/смены категории проекта.
+
+        **Когда вызывается:**
+        - После `POST /projects/create`, если пользователь хочет поправить
+          предложенную категорию (экран метаданных в боте)
+        - Перед `PATCH /projects/{id}` со сменой `category_id`
+        - На веб-форме редактирования проекта
+
+        Категория, предложенная при create, уже приходит в ответе create —
+        этот метод нужен только для **ручного** выбора из справочника.
+      responses:
+        '200':
+          description: Дерево категорий
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoriesResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /generation/options:
+    get:
+      tags: [Generation]
+      summary: Обычные настройки генерации (зависят от фото проекта)
+      description: |
+        **Зачем:** вернуть **только обычные (базовые)** настройки генерации,
+        которые зависят от загруженных фото конкретного проекта и выбранного
+        `output_type`. Клиент строит по ним первый экран настроек.
+
+        Состав `fields` по типу:
+        - **photo** — варианты `style`, метаданные поля `wishes`
+        - **card** — черновик/подсказка `about_text` (референс дизайна — на клиенте)
+        - **video** — метаданные поля `description`
+
+        **Расширенные** настройки (формат, 1K/2K/4K, стиль съёмки, duration,
+        card_mode, loop, …) задаются UI на клиенте.
+        При `generate` / `quota` клиент шлёт их внутри `settings`.
+
+        **Когда вызывается:**
+        - После выбора типа генерации (photo / card / video), до экрана
+          подтверждения
+        - При повторном открытии настроек для того же проекта и типа
+        - При «Открываем проект» из списка — после выбора типа
+
+        Обязателен `project_id`: опции привязаны к уже загруженным основам.
+      operationId: getGenerationOptions
+      parameters:
+        - name: project_id
+          in: query
+          required: true
+          description: ID проекта, для чьих фото нужны обычные опции
+          schema:
+            type: string
+        - name: output_type
+          in: query
+          required: true
+          description: Тип результата, под который строятся обычные поля
+          schema:
+            $ref: '#/components/schemas/OutputType'
+      responses:
+        '200':
+          description: Обычные опции и suggested-значения
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerationOptionsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /projects/create:
+    post:
+      tags: [Projects]
+      summary: Создать проект из 1–4 фото
+      description: |
+        **Зачем:** одним запросом создать проект: сохранить 1–4 фото товара,
+        проанализировать их (название + категория) и вернуть готовые данные
+        для следующего шага UI.
+
+        **Когда вызывается:**
+        - Бот: пользователь нажал «Готово» после загрузки 1–4 фото в чат
+        - Web/app: submit формы «Новый проект» с файлами
+
+        **Ответ содержит:** `id`, предложенные `title` и `category_*`,
+        массив `images` со ссылками для превью.
+
+        Дальше клиент обычно показывает экран метаданных (можно PATCH),
+        затем выбор типа генерации.
+      operationId: createProjectWithImages
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [files]
+              properties:
+                files:
+                  type: array
+                  minItems: 1
+                  maxItems: 4
+                  items:
+                    type: string
+                    format: binary
+                  description: 1–4 изображения товара (основы проекта)
+            encoding:
+              files:
+                style: form
+                explode: true
+      responses:
+        '200':
+          description: Проект создан, фото сохранены, метаданные предложены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectCreateResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '413':
+          description: Файл слишком большой
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /projects:
+    get:
+      tags: [Projects]
+      summary: Список проектов пользователя
+      operationId: listProjects
+      description: |
+        **Зачем:** постраничный список проектов текущего пользователя
+        (карточки в профиле / разделе «Мои проекты»).
+
+        **Когда вызывается:**
+        - Бот: Профиль → «Мои проекты»
+        - Web: экран галереи проектов, пагинация
+
+        В элементах списка — краткие поля (`id`, `title`, опционально
+        `output_type` последней генерации, `thumb_url`).
+
+        Для полного просмотра основ и `results[]` — `GET /projects/{id}`.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/LimitProjects'
+      responses:
+        '200':
+          description: Страница списка проектов
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectsListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /projects/{project_id}:
+    get:
+      tags: [Projects]
+      summary: Детали проекта
+      operationId: getProject
+      description: |
+        **Зачем:** полная карточка проекта — основы (`images[]`), история
+        генераций (`results[]`), название и категория.
+
+        **Когда вызывается:**
+        - Открытие проекта из списка
+        - Перед «Открываем проект» → новая генерация (нужны URL фото)
+        - После успешного job — обновить UI (новый элемент в `results`)
+        - Web: страница проекта / галерея результатов
+
+        Результаты копятся в `results[]` (append при каждой успешной генерации).
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: Проект с основами и results[]
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectDetail'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [Projects]
+      summary: Обновить название / категорию
+      operationId: updateProject
+      description: |
+        **Зачем:** исправить метаданные, которые сервер предложил при create
+        (или которые пользователь меняет позже).
+
+        **Когда вызывается:**
+        - Экран метаданных сразу после create (смена title / category)
+        - Редактирование проекта в веб-кабинете
+        - Опционально перед generate, если title/category передают не в
+          теле generate, а отдельным PATCH
+
+        Меняются только `title`, `category_id`, `category_path`.
+        Фото основы через PATCH не меняются (новый набор — новый create).
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProjectRequest'
+      responses:
+        '200':
+          description: Метаданные обновлены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectDetail'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /projects/{project_id}/generate:
+    post:
+      tags: [Projects, Generation]
+      summary: Запустить генерацию
+      description: |
+        **Зачем:** списать искры и поставить задачу генерации в очередь для
+        уже существующего проекта (фото уже в проекте после create).
+
+        **Когда вызывается:**
+        - После экрана подтверждения, если `POST /wallet/quota` показал
+          `can_generate: true`
+        - Повтор («Повторить») при failed job с теми же settings
+        - Повторная генерация из карточки проекта (другой тип / настройки)
+
+        В `settings` — обычные поля (из options + ввод пользователя) **и**
+        расширенные с клиента (format, resolution, …).
+
+        **Ответ:** `job_id` + начальный `status` (обычно `queued`).
+        Клиент опрашивает `GET /jobs/{job_id}` до `done` / `failed`.
+        При `done` сервер **append**'ит запись в `project.results`.
+
+        `402` — недостаточно искр (лучше заранее проверить через quota).
+      operationId: startGeneration
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartGenerationRequest'
+      responses:
+        '200':
+          description: Job создан и поставлен в очередь
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StartGenerationResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '402':
+          description: Недостаточно искр
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /jobs/{job_id}:
+    get:
+      tags: [Generation]
+      summary: Статус задачи генерации
+      operationId: getJobStatus
+      description: |
+        **Зачем:** узнать прогресс асинхронной генерации и забрать URL
+        результата, когда job завершён.
+
+        **Когда вызывается:**
+        - Сразу после `POST …/generate` — polling (бот: каждые ~3 с)
+        - Web: polling или long-poll / WS-обёртка поверх этой ручки
+
+        Статусы: `queued` → `processing` → `done` | `failed`.
+        При `done` в ответе есть `result_url` (и опционально `result_id`);
+        тот же результат уже лежит в `GET /projects/{id}.results`.
+
+        При `failed` — поле `error` для показа пользователю.
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          description: ID задачи из ответа `POST …/generate`
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Текущий статус job (и результат, если done)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerationStatusResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /profile:
+    get:
+      tags: [Profile]
+      summary: Профиль пользователя
+      operationId: getProfile
+      description: |
+        **Зачем:** показать баланс искр и краткую статистику аккаунта.
+
+        **Когда вызывается:**
+        - Открытие раздела «Профиль» в боте / приложении
+        - После оплаты пакета — обновить отображаемый баланс
+        - После генерации — обновить счётчики (если UI их показывает)
+
+        Типичные поля: `balance_sparks`, `projects_count`, `display_name`,
+        опционально `generated_images`.
+      responses:
+        '200':
+          description: Профиль текущего пользователя
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /profile/balance-history:
+    get:
+      tags: [Profile]
+      summary: История баланса искр
+      operationId: getBalanceHistory
+      description: |
+        **Зачем:** лента операций по искрам (пополнения и списания за
+        генерации) для прозрачности баланса.
+
+        **Когда вызывается:**
+        - Профиль → «История баланса»
+        - Web: страница транзакций кошелька
+
+        Каждая запись: сумма, kind (`credit` / `debit`), title, время.
+        Пагинация через `page` / `limit`.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/LimitHistory'
+      responses:
+        '200':
+          description: Страница истории транзакций
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalanceHistoryResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /account:
+    delete:
+      tags: [Profile]
+      summary: Удалить аккаунт и данные
+      operationId: deleteAccount
+      description: |
+        **Зачем:** полное удаление аккаунта пользователя и связанных данных
+        (проекты, история, токены на стороне сервера).
+
+        **Когда вызывается:**
+        - Профиль → «Удалить аккаунт» после явного подтверждения в UI
+        - Запрос субъекта ПДн на удаление данных
+
+        После `204` клиент обязан очистить локальный/Redis кэш auth и
+        считать пользователя разлогиненным. Повторный вход создаст
+        нового пользователя (или восстановит по политике бэкенда).
+      responses:
+        '204':
+          description: Аккаунт удалён
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /wallet/quota:
+    post:
+      tags: [Shop, Generation]
+      summary: Проверить стоимость и возможность генерации
+      operationId: checkGenerationQuota
+      description: |
+        **Зачем:** до запуска генерации узнать `cost_sparks`, текущий
+        `balance_sparks` и флаг `can_generate` — без списания средств.
+
+        **Когда вызывается:**
+        - Экран подтверждения генерации (показать «Стоимость / Баланс»)
+        - Чтобы решить, показывать кнопку «Сгенерировать» или «Пополнить»
+        - Перед `POST …/generate` (бот делает повторную проверку)
+
+        В теле передаются `output_type` и `settings` (для photo/card важен
+        `resolution` с клиента: 1K=3, 2K=4, 4K=6; video=16).
+
+        Не списывает искры — только расчёт. Списание происходит в generate.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuotaRequest'
+      responses:
+        '200':
+          description: Стоимость, баланс и can_generate
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerationQuota'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /shop/packs:
+    get:
+      tags: [Shop]
+      summary: Пакеты искр
+      operationId: listShopPacks
+      description: |
+        **Зачем:** каталог пакетов пополнения (название, цена, число искр,
+        оценка «примерно N фото / M видео»).
+
+        **Когда вызывается:**
+        - Раздел «Магазин»
+        - Экран «Недостаточно искр» → переход к пополнению
+        - Web: страница тарифов / пакетов
+
+        Пользователь выбирает `pack_id` и идёт в `POST /payments/create`.
+      responses:
+        '200':
+          description: Список доступных пакетов
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShopPacksResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /payments/create:
+    post:
+      tags: [Shop]
+      summary: Создать платёж на пакет
+      operationId: createPayment
+      description: |
+        **Зачем:** инициировать оплату выбранного пакета искр и получить
+        данные для оплаты (`payment_id`, `payment_url`).
+
+        **Когда вызывается:**
+        - Пользователь выбрал пакет в магазине и нажал «Купить» / «Оплатить»
+        - Бот: создание платежа перед редиректом / Stars / mock-confirm
+
+        В production клиент обычно открывает `payment_url` или инициирует
+        провайдера (`provider`). Зачисление искр — через webhook провайдера
+        (или mock `…/confirm` в dev).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePaymentRequest'
+      responses:
+        '200':
+          description: Платёж создан, можно оплачивать
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /payments/{payment_id}/confirm:
+    post:
+      tags: [Shop]
+      summary: '[Mock/Dev] Подтвердить оплату клиентом'
+      description: |
+        **Зачем:** в mock/dev окружении сразу зачислить искры по платежу
+        без реального провайдера (имитация успешной оплаты).
+
+        **Когда вызывается:**
+        - Локальная разработка и демо-бот после `payments/create`
+        - E2E-тесты пополнения баланса
+
+        **Не для production.** В бою зачисление делает webhook платёжного
+        провайдера (отдельная ручка TBD). После успеха клиент обновляет
+        профиль через `GET /profile`.
+      operationId: confirmPaymentMock
+      parameters:
+        - name: payment_id
+          in: path
+          required: true
+          description: ID платежа из `POST /payments/create`
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Оплата подтверждена, искры зачислены (профиль)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Access token (короткоживущий)
+
+  parameters:
+    ProjectId:
+      name: project_id
+      in: path
+      required: true
+      schema:
+        type: string
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+    LimitProjects:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 50
+        default: 20
+    LimitHistory:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 50
+        default: 10
+
+  responses:
+    Unauthorized:
+      description: Не авторизован / невалидный токен
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Не найдено
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    ValidationError:
+      description: Ошибка валидации
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  schemas:
+    ErrorResponse:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          example: not_found
+        message:
+          type: string
+          example: Проект не найден
+        details:
+          type: object
+          additionalProperties: true
+
+    OutputType:
+      type: string
+      enum: [photo, card, video]
+
+    JobStatus:
+      type: string
+      enum: [queued, processing, done, failed]
+
+    MediaAsset:
+      type: object
+      required: [url]
+      properties:
+        key:
+          type: string
+          nullable: true
+          description: Внутренний storage key (если нужен клиенту)
+        url:
+          type: string
+          format: uri
+          description: URL для отображения
+        content_type:
+          type: string
+          nullable: true
+        size:
+          type: integer
+          nullable: true
+
+    TelegramAuthRequest:
+      type: object
+      required: [telegram_id]
+      properties:
+        telegram_id:
+          type: integer
+          format: int64
+        username:
+          type: string
+          nullable: true
+        first_name:
+          type: string
+          nullable: true
+        last_name:
+          type: string
+          nullable: true
+        language_code:
+          type: string
+          nullable: true
+        init_data:
+          type: string
+          nullable: true
+          description: Telegram WebApp initData
+
+    WebAuthRequest:
+      type: object
+      required: [login, password]
+      properties:
+        login:
+          type: string
+          description: Email или username
+          example: user@example.com
+        password:
+          type: string
+          format: password
+
+    RefreshRequest:
+      type: object
+      required: [refresh_token]
+      properties:
+        refresh_token:
+          type: string
+
+    TokenPair:
+      type: object
+      required: [access_token, refresh_token]
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        token_type:
+          type: string
+          default: bearer
+        expires_in:
+          type: integer
+          nullable: true
+          description: TTL access_token в секундах (опционально)
+
+    UserProfile:
+      type: object
+      required: [id]
+      properties:
+        id:
+          type: string
+        telegram_id:
+          type: integer
+          format: int64
+          nullable: true
+        username:
+          type: string
+          nullable: true
+        first_name:
+          type: string
+          nullable: true
+        last_name:
+          type: string
+          nullable: true
+        display_name:
+          type: string
+          nullable: true
+
+    AuthResponse:
+      allOf:
+        - $ref: '#/components/schemas/TokenPair'
+        - type: object
+          required: [user]
+          properties:
+            user:
+              $ref: '#/components/schemas/UserProfile'
+
+    CategoryNode:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/CategoryNode'
+          default: []
+
+    CategoriesResponse:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CategoryNode'
+
+    GenerationOptionsResponse:
+      type: object
+      required: [project_id, output_type, fields]
+      description: |
+        Обычные настройки. Состав `fields` зависит от output_type и фото проекта.
+      properties:
+        project_id:
+          type: string
+        output_type:
+          $ref: '#/components/schemas/OutputType'
+        fields:
+          type: object
+          description: |
+            photo: `style` — массив `{value, label}`; опционально `wishes` (hint поля)
+            card: `about_text` (suggested draft); design_reference — на клиенте
+            video: `description` (hint поля)
+          additionalProperties: true
+        suggested:
+          type: object
+          additionalProperties: true
+          description: Подсказки/автозаполнение (например about_text для card)
+      example:
+        project_id: proj-1
+        output_type: photo
+        fields:
+          style:
+            - value: Студийный
+              label: Студийный
+            - value: Мода
+              label: Мода
+          wishes:
+            type: text
+            required: false
+            placeholder: Пожелания к генерации
+        suggested: {}
+
+    ProjectCreateResponse:
+      type: object
+      required: [id, title, category_id, category_path, images]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+          description: Предложенное название товара
+        category_id:
+          type: string
+        category_path:
+          type: array
+          items:
+            type: string
+          example: ['Одежда', 'Футболки']
+        images:
+          type: array
+          minItems: 1
+          maxItems: 4
+          items:
+            $ref: '#/components/schemas/MediaAsset'
+          description: Ссылки на загруженные основы проекта
+
+    ProjectListItem:
+      type: object
+      required: [id, title]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        output_type:
+          allOf:
+            - $ref: '#/components/schemas/OutputType'
+          nullable: true
+          description: Тип последней генерации (если была)
+        thumb_url:
+          type: string
+          format: uri
+          nullable: true
+
+    ProjectsListResponse:
+      type: object
+      required: [items, page, total, has_more]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectListItem'
+        page:
+          type: integer
+        total:
+          type: integer
+        has_more:
+          type: boolean
+
+    GenerationResult:
+      type: object
+      required: [id, output_type, result_url]
+      properties:
+        id:
+          type: string
+        output_type:
+          $ref: '#/components/schemas/OutputType'
+        result_url:
+          type: string
+          format: uri
+        thumb_url:
+          type: string
+          format: uri
+          nullable: true
+        settings:
+          type: object
+          additionalProperties: true
+          description: Снимок settings на момент генерации
+        cost_sparks:
+          type: integer
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    ProjectDetail:
+      type: object
+      required: [id, title, images, results]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        output_type:
+          allOf:
+            - $ref: '#/components/schemas/OutputType'
+          nullable: true
+        category_id:
+          type: string
+          nullable: true
+        category_path:
+          type: array
+          items:
+            type: string
+          default: []
+        images:
+          type: array
+          items:
+            $ref: '#/components/schemas/MediaAsset'
+          description: Основы проекта (1–4)
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/GenerationResult'
+        thumb_url:
+          type: string
+          format: uri
+          nullable: true
+
+    UpdateProjectRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          nullable: true
+        category_id:
+          type: string
+          nullable: true
+        category_path:
+          type: array
+          items:
+            type: string
+          nullable: true
+
+    StartGenerationRequest:
+      type: object
+      required: [output_type, settings]
+      properties:
+        output_type:
+          $ref: '#/components/schemas/OutputType'
+        title:
+          type: string
+          nullable: true
+          description: Если передано — обновить название перед генерацией
+        category_id:
+          type: string
+          nullable: true
+        settings:
+          type: object
+          additionalProperties: true
+          description: |
+            Обычные + расширенные в одном объекте.
+
+            photo:
+              style, wishes,
+              model_photo_url, environment_photo_url, photography_style,
+              format (9:16|3:4|1:1|4:3|16:9, default 3:4),
+              resolution (1K|2K|4K, default 2K)
+
+            card:
+              design_reference_url, about_text,
+              card_style, reference_mode (copy|inspire),
+              format, resolution
+
+            video:
+              description,
+              duration (5|10), card_mode, loop, final_frame_url
+
+    StartGenerationResponse:
+      type: object
+      required: [job_id, status]
+      properties:
+        job_id:
+          type: string
+        status:
+          $ref: '#/components/schemas/JobStatus'
+          default: queued
+
+    GenerationStatusResponse:
+      type: object
+      required: [job_id, status]
+      properties:
+        job_id:
+          type: string
+        status:
+          $ref: '#/components/schemas/JobStatus'
+        result_url:
+          type: string
+          format: uri
+          nullable: true
+        result_type:
+          allOf:
+            - $ref: '#/components/schemas/OutputType'
+          nullable: true
+        result_id:
+          type: string
+          nullable: true
+        error:
+          type: string
+          nullable: true
+
+    ProfileResponse:
+      type: object
+      required: [balance_sparks, projects_count]
+      properties:
+        balance_sparks:
+          type: integer
+          minimum: 0
+        projects_count:
+          type: integer
+          minimum: 0
+        display_name:
+          type: string
+          nullable: true
+
+    BalanceHistoryItem:
+      type: object
+      required: [id, amount, kind, title, created_at]
+      properties:
+        id:
+          type: string
+        amount:
+          type: integer
+          minimum: 0
+        kind:
+          type: string
+          enum: [credit, debit]
+        title:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    BalanceHistoryResponse:
+      type: object
+      required: [items, page, total, has_more]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/BalanceHistoryItem'
+        page:
+          type: integer
+        total:
+          type: integer
+        has_more:
+          type: boolean
+
+    QuotaRequest:
+      type: object
+      required: [output_type]
+      properties:
+        output_type:
+          $ref: '#/components/schemas/OutputType'
+        settings:
+          type: object
+          additionalProperties: true
+          description: |
+            Те же settings, что у generate. Для photo/card важен resolution
+            (1K=3, 2K=4, 4K=6 искр; default 2K). Для video cost фиксирован (16).
+
+    GenerationQuota:
+      type: object
+      required: [can_generate, balance_sparks, cost_sparks]
+      properties:
+        can_generate:
+          type: boolean
+        balance_sparks:
+          type: integer
+        cost_sparks:
+          type: integer
+        reason:
+          type: string
+          nullable: true
+
+    ShopPack:
+      type: object
+      required:
+        [id, name, description, price_rub, sparks, approx_images, approx_videos]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        label:
+          type: string
+          nullable: true
+        price_rub:
+          type: integer
+          minimum: 0
+        sparks:
+          type: integer
+          minimum: 1
+        approx_images:
+          type: integer
+        approx_videos:
+          type: integer
+
+    ShopPacksResponse:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ShopPack'
+
+    CreatePaymentRequest:
+      type: object
+      required: [pack_id]
+      properties:
+        pack_id:
+          type: string
+        provider:
+          type: string
+          default: mock
+
+    PaymentResponse:
+      type: object
+      required: [payment_id, payment_url, status]
+      properties:
+        payment_id:
+          type: string
+        payment_url:
+          type: string
+          format: uri
+        status:
+          type: string
+          enum: [pending, completed, failed, cancelled]
+          default: pending
+        pack_id:
+          type: string
+          nullable: true

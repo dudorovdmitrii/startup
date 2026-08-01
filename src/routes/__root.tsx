@@ -37,8 +37,8 @@ export const Route = createRootRoute({
   shellComponent: RootDocument,
   notFoundComponent: () => (
     <div className="p-2 text-center">
-      <h3 className="text-lg font-semibold">404 Not Found</h3>
-      <p>The page you are looking for does not exist.</p>
+      <h3 className="text-lg font-semibold">Упс...</h3>
+      <p>Страница не найдена.</p>
     </div>
   ),
 })
