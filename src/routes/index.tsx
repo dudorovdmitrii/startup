@@ -46,7 +46,7 @@ const howItWorksSteps = [
     description: 'Начните с загрузки вашего фото товара. Мы покажем, как будет выглядеть сгенерированная карточка.',
     component: (selectedConceptId: string | null, concepts: any[], selectedImageIndex: number) => (
       <div className="flex flex-col items-center justify-between space-y-4 h-full">
-        <img src="/shirts.webp" alt="Шаг 1: Загрузка фото" className="h-71 w-71 object-contain rounded-lg" />
+        <img src="/shirts.webp" alt="Шаг 1: Загрузка фото" className="h-71 object-contain rounded-lg" />
       </div>
     ),
   },
@@ -54,12 +54,12 @@ const howItWorksSteps = [
     title: 'Выберите концепцию',
     description: 'Выберите одну из представленных концепций. Каждая концепция предлагает уникальный стиль оформления.',
     component: (selectedConceptId: string | null, concepts: any[], selectedImageIndex: number, setSelectedConceptId: (id: string) => void, setSelectedImageIndex: (index: number) => void) => (
-      <div className="flex flex-col space-y-2 h-full w-full">
+      <div className="flex flex-col space-y-2 h-full w-full p-1">
         {concepts.map((concept) => (
           <div
             key={concept.id}
             className={`cursor-pointer rounded-lg p-1 transition-all duration-200 flex items-center w-full ${selectedConceptId === concept.id
-              ? 'border-2 border-[var(--lagoon-deep)]' : ''}`}
+              ? 'outline-2 outline-[var(--lagoon-deep)]' : ''}`}
             onClick={() => { setSelectedConceptId(concept.id); setSelectedImageIndex(0); }}>
             <img
               src={concept.images[0]}
@@ -83,21 +83,21 @@ const howItWorksSteps = [
         return <p className="text-center text-[var(--sea-ink-soft)]">Выберите концепцию на шаге 2.</p>;
       }
       return (
-        <div className="flex flex-row space-x-4 h-full w-full">
+        <div className="flex flex-row space-x-2 h-full w-full">
           {/* Vertical list of small photos */}
-          <div className="flex flex-col space-y-2 h-full justify-center">
+          <div className="flex flex-col space-y-2 h-full justify-center p-1">
             {selectedConcept.images.map((image: string, index: number) => (
               <div
                 key={index}
-                className={`cursor-pointer transition-all duration-200 p-0.5
-                  ${selectedImageIndex === index ? 'border-2 border-[var(--lagoon-deep)]' : ''}
+                className={`cursor-pointer transition-all duration-200 p-1 rounded-md
+                  ${selectedImageIndex === index ? 'outline-2 outline-[var(--lagoon-deep)]' : ''}
                 `}
                 onClick={() => setSelectedImageIndex(index)}
               >
                 <img
                   src={image}
                   alt={`Вариант ${index + 1}`}
-                  className="h-20 w-16 object-cover"
+                  className="h-20 object-cover rounded-md"
                 />
               </div>
             ))}
@@ -108,7 +108,7 @@ const howItWorksSteps = [
             <img
               src={selectedConcept.images[selectedImageIndex]}
               alt="Сгенерированная карточка"
-              className="h-64 w-64 object-contain rounded-lg"
+              className="h-71 object-contain rounded-lg"
             />
           </div>
         </div>
